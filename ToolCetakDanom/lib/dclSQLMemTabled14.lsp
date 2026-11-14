@@ -1,0 +1,1 @@
+-+S:\Projects\Delphi Components\SQLMemTable4\Work_SQLMem\SQLMemFldLinks.obj -+S:\Projects\Delphi Components\SQLMemTable4\Work_SQLMem\SQLMemEdit.obj -+S:\Projects\Delphi Components\SQLMemTable4\Work_SQLMem\SQLMemDatabaseDesigner.obj -+S:\Projects\Delphi Components\SQLMemTable4\Work_SQLMem\SQLMemReg.obj -+C:\compilers\Delphi14\\lib\SysInit.obj 

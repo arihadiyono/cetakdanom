@@ -1,0 +1,135 @@
+<UserControl x:Class="CetakDanom.Desktop.Views.DashboardHomeView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             mc:Ignorable="d" 
+             d:DesignHeight="700" d:DesignWidth="1000">
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="24">
+            <!-- Welcome Header Card -->
+            <Border Style="{StaticResource CardBorderStyle}" Background="{StaticResource NavyDarkBrush}" BorderThickness="0" Padding="24" Margin="0,0,0,24">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Grid.Column="0">
+                        <TextBlock Text="Selamat Datang di Portal CetakDanom Modern," Foreground="#94A3B8" FontSize="13"/>
+                        <TextBlock Text="{Binding Petugas.Nama}" Foreground="White" FontWeight="Bold" FontSize="22" Margin="0,4,0,4"/>
+                        <TextBlock Text="{Binding Petugas.RingkasanProfil}" Foreground="#CBD5E1" FontSize="13"/>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Center">
+                        <Button Content="Buka Pengelolaan Danom" Style="{StaticResource PrimaryButtonStyle}" 
+                                Command="{Binding NavigateToDanomCommand}" Padding="20,10"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <!-- KPI Metric Cards Grid -->
+            <Grid Margin="0,0,0,24">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Total KPM -->
+                <Border Grid.Column="0" Style="{StaticResource CardBorderStyle}" Margin="0,0,12,0">
+                    <StackPanel>
+                        <TextBlock Text="TOTAL PENERIMA (KPM)" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource TextMutedBrush}"/>
+                        <TextBlock Text="{Binding TotalKpm}" FontSize="28" FontWeight="Bold" Foreground="{StaticResource NavyDarkBrush}" Margin="0,6,0,0"/>
+                        <TextBlock Text="Data sintetis in-memory" FontSize="11" Foreground="#10B981" Margin="0,4,0,0"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- Total Nominal -->
+                <Border Grid.Column="1" Style="{StaticResource CardBorderStyle}" Margin="6,0,6,0">
+                    <StackPanel>
+                        <TextBlock Text="TOTAL DANA BANTUAN (BSU)" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource TextMutedBrush}"/>
+                        <TextBlock Text="{Binding TotalNominalFormatted}" FontSize="24" FontWeight="Bold" Foreground="{StaticResource PosOrangeBrush}" Margin="0,6,0,0"/>
+                        <TextBlock Text="Alokasi Termin Berjalan" FontSize="11" Foreground="{StaticResource TextMutedBrush}" Margin="0,4,0,0"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- Siap Cetak -->
+                <Border Grid.Column="2" Style="{StaticResource CardBorderStyle}" Margin="6,0,6,0">
+                    <StackPanel>
+                        <TextBlock Text="DANOM SIAP CETAK" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource TextMutedBrush}"/>
+                        <TextBlock Text="{Binding SiapCetak}" FontSize="28" FontWeight="Bold" Foreground="#F59E0B" Margin="0,6,0,0"/>
+                        <TextBlock Text="Menunggu Ekspor / Cetak" FontSize="11" Foreground="#F59E0B" Margin="0,4,0,0"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- Sudah Cetak -->
+                <Border Grid.Column="3" Style="{StaticResource CardBorderStyle}" Margin="12,0,0,0">
+                    <StackPanel>
+                        <TextBlock Text="SUDAH DICETAK" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource TextMutedBrush}"/>
+                        <TextBlock Text="{Binding SudahCetak}" FontSize="28" FontWeight="Bold" Foreground="#16A34A" Margin="0,6,0,0"/>
+                        <TextBlock Text="Arsip Danom Fisik" FontSize="11" Foreground="#16A34A" Margin="0,4,0,0"/>
+                    </StackPanel>
+                </Border>
+            </Grid>
+
+            <!-- Modern Info Section -->
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="2*"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Feasibility & Architecture Checklist -->
+                <Border Grid.Column="0" Style="{StaticResource CardBorderStyle}" Margin="0,0,12,0">
+                    <StackPanel>
+                        <TextBlock Text="STATUS VALIDASI MODERNISASI (FASE 1)" FontWeight="Bold" FontSize="15" Margin="0,0,0,12"/>
+
+                        <StackPanel Margin="0,0,0,10">
+                            <TextBlock Text="1. Antarmuka Desktop Modern (WPF &amp; MVVM)" FontWeight="SemiBold"/>
+                            <TextBlock Text="Validasi arsitektur bersih tanpa business logic di code-behind, dependency injection, dan binding reaktif." Foreground="{StaticResource TextMutedBrush}" FontSize="12"/>
+                        </StackPanel>
+
+                        <StackPanel Margin="0,0,0,10">
+                            <TextBlock Text="2. Cascading Wilayah &amp; Data Presentation" FontWeight="SemiBold"/>
+                            <TextBlock Text="Hierarki Provinsi -> Kabupaten -> Kecamatan -> Kelurahan dengan auto-reset dependensi dan filter interaktif." Foreground="{StaticResource TextMutedBrush}" FontSize="12"/>
+                        </StackPanel>
+
+                        <StackPanel Margin="0,0,0,10">
+                            <TextBlock Text="3. Ekspor BNBA Semicolon &amp; Backtick NIK" FontWeight="SemiBold"/>
+                            <TextBlock Text="Mempertahankan 14 kolom skema Delphi dengan titik koma (;) dan backtick (`) pencegah notasi ilmiah Excel." Foreground="{StaticResource TextMutedBrush}" FontSize="12"/>
+                        </StackPanel>
+
+                        <StackPanel Margin="0,0,0,10">
+                            <TextBlock Text="4. Kontrak Barcode 2D 6 Segmen Pipa (|)" FontWeight="SemiBold"/>
+                            <TextBlock Text="Implementasi format payload kuitansi terpisah pipa (|) yang kompatibel 100% dengan scanner loket pos eksisting." Foreground="{StaticResource TextMutedBrush}" FontSize="12"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <!-- Quick Environment Info -->
+                <Border Grid.Column="1" Style="{StaticResource CardBorderStyle}" Margin="12,0,0,0">
+                    <StackPanel>
+                        <TextBlock Text="INFORMASI LINGKUNGAN" FontWeight="Bold" FontSize="15" Margin="0,0,0,12"/>
+
+                        <TextBlock Text="Mode Runtime:" FontWeight="SemiBold" FontSize="12"/>
+                        <TextBlock Text="MOCK / SYNTHETIC DATA" Foreground="#B45309" FontWeight="Bold" Margin="0,0,0,8"/>
+
+                        <TextBlock Text="Teknologi:" FontWeight="SemiBold" FontSize="12"/>
+                        <TextBlock Text="C# .NET 8.0 LTS (WPF Modern)" Foreground="{StaticResource TextDarkBrush}" Margin="0,0,0,8"/>
+
+                        <TextBlock Text="Kantor Operasional:" FontWeight="SemiBold" FontSize="12"/>
+                        <TextBlock Text="{Binding Petugas.Kantor}" Foreground="{StaticResource TextDarkBrush}" Margin="0,0,0,8"/>
+
+                        <TextBlock Text="Kode NOPEND Cabang:" FontWeight="SemiBold" FontSize="12"/>
+                        <TextBlock Text="{Binding Petugas.Nopend}" Foreground="{StaticResource TextDarkBrush}" Margin="0,0,0,8"/>
+
+                        <Button Content="Segarkan Data" Style="{StaticResource SecondaryButtonStyle}" 
+                                Command="{Binding RefreshCommand}" Margin="0,12,0,0"/>
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

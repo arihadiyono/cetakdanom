@@ -1,0 +1,33 @@
+## Visual Studio / .NET
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+.vs/
+*.user
+*.userosscache
+*.sln.docstates
+*.suo
+*.userprefs
+
+## Visual Studio Code
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+## Rider
+.idea/
+
+## Delphi temporary files
+*.~*
+*.dcu
+*.dpu
+*.ddp
+*.local
+*.identcache
+*.stat
+*.tgs
+*.tgw
+*.drc

@@ -1,0 +1,822 @@
+openapi: 3.0.3
+info:
+  title: CetakDanom (FDPOS) Modernization API Specification
+  description: >
+    Spesifikasi REST API Backend Go untuk modernisasi aplikasi desktop CetakDanom (FDPOS PT Pos Indonesia).
+    Menghubungkan klien desktop C# (.NET 8) dengan Microsoft SQL Server tanpa mengubah Stored Procedure eksisting.
+  version: 1.0.0
+  contact:
+    name: Tim Pengembang Sistem FDPOS PT Pos Indonesia
+    email: support-fdpos@posindonesia.co.id
+
+servers:
+  - url: https://fdpos-api.posindonesia.co.id/api/v1
+    description: Production Gateway Server (Caddy Reverse Proxy)
+  - url: http://localhost:8080/api/v1
+    description: Local Development Environment
+
+security:
+  - BearerAuth: []
+
+paths:
+  /auth/login:
+    post:
+      summary: Autentikasi Petugas Loket Pos
+      description: >
+        Memvalidasi kredensial petugas loket pos, memanggil SP SIKAP_LOGIN di MSSQL,
+        mengurai profil petugas, dan menerbitkan JWT token.
+      security: []
+      tags:
+        - Autentikasi
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequestDTO'
+      responses:
+        '200':
+          description: Login berhasil dan token diterbitkan
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponseWrapper'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '426':
+          $ref: '#/components/responses/UpgradeRequiredError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /auth/me:
+    get:
+      summary: Profil Petugas Aktif
+      description: Mengambil data profil petugas dari JWT token sesi yang aktif.
+      tags:
+        - Autentikasi
+      responses:
+        '200':
+          description: Profil berhasil diambil
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfileResponseWrapper'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  /app/version:
+    get:
+      summary: Pengecekan Versi Aplikasi & Update Manifest
+      description: Memeriksa apakah versi klien memenuhi syarat versi minimum server.
+      security: []
+      tags:
+        - Aplikasi
+      parameters:
+        - name: current_version
+          in: query
+          required: true
+          schema:
+            type: string
+            example: "4.1.9"
+      responses:
+        '200':
+          description: Informasi versi aplikasi berhasil diambil
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VersionCheckResponseWrapper'
+
+  /wilayah/layanan:
+    get:
+      summary: Daftar Layanan Bantuan Sosial
+      description: Mengambil daftar program bantuan sosial aktif via SIKAP_GET_LAYANAN.
+      tags:
+        - Hierarki Wilayah
+      responses:
+        '200':
+          description: Daftar layanan berhasil diambil
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LayananListResponseWrapper'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  /wilayah/tahap:
+    get:
+      summary: Daftar Tahap Penyaluran Bansos
+      description: Mengambil daftar nomor tahap penyaluran bansos via SIKAP_GET_TAHAP.
+      tags:
+        - Hierarki Wilayah
+      parameters:
+        - name: kode_project
+          in: query
+          required: false
+          schema:
+            type: string
+            example: "PU1"
+      responses:
+        '200':
+          description: Daftar tahap berhasil diambil
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TahapListResponseWrapper'
+
+  /wilayah/kabupaten:
+    get:
+      summary: Daftar Kabupaten Wilayah Kerja
+      description: Mengambil daftar kabupaten/kota berdasarkan Nopend petugas via SIKAP_GET_KABUPATEN.
+      tags:
+        - Hierarki Wilayah
+      responses:
+        '200':
+          description: Daftar kabupaten berhasil diambil
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WilayahListResponseWrapper'
+
+  /wilayah/kecamatan:
+    get:
+      summary: Daftar Kecamatan
+      description: Mengambil daftar kecamatan di bawah kabupaten tertentu via SIKAP_GET_KECAMATAN.
+      tags:
+        - Hierarki Wilayah
+      parameters:
+        - name: kode_kabupaten
+          in: query
+          required: true
+          schema:
+            type: string
+            example: "3273"
+      responses:
+        '200':
+          description: Daftar kecamatan berhasil diambil
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WilayahListResponseWrapper'
+
+  /wilayah/kelurahan:
+    get:
+      summary: Daftar Kelurahan (per Kecamatan)
+      description: Mengambil daftar kelurahan/desa di bawah kecamatan tertentu via SIKAP_GET_KELURAHAN_BYKEC.
+      tags:
+        - Hierarki Wilayah
+      parameters:
+        - name: kode_kecamatan
+          in: query
+          required: true
+          schema:
+            type: string
+            example: "327301"
+      responses:
+        '200':
+          description: Daftar kelurahan berhasil diambil
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WilayahListResponseWrapper'
+
+  /danom/batch:
+    post:
+      summary: Ekstraksi Data Batch Nominatif Kelurahan
+      description: >
+        Mengekstrak data 24 kolom penerima bansos dalam 1 kelurahan via SIKAP_GET_DATA_BANSOSRS
+        untuk disimpan ke SQLite lokal klien.
+      tags:
+        - Danom & Bansos
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DanomBatchRequestDTO'
+      responses:
+        '200':
+          description: Data nominatif berhasil diekstraksi
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DanomBatchResponseWrapper'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+  /danom/status-cetak:
+    post:
+      summary: Pembaruan Status Cetak Dokumen & Audit Log
+      description: Mencatat audit log dan menandai bahwa dokumen Danom atau Bukti Terima telah dicetak.
+      tags:
+        - Danom & Bansos
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DanomStatusCetakRequestDTO'
+      responses:
+        '200':
+          description: Status cetak berhasil diperbarui
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericSuccessResponse'
+
+  /cds/cek-nik:
+    post:
+      summary: Verifikasi Data KPM Susulan CDS BLT
+      description: Melakukan panggilan proxy real-time ke WSO2 API Gateway port 8280 berdasarkan NIK.
+      tags:
+        - CDS BLT
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CdsCekNikRequestDTO'
+      responses:
+        '200':
+          description: Data KPM ditemukan
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CdsBeneficiaryResponseWrapper'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '502':
+          $ref: '#/components/responses/BadGatewayError'
+
+  /param/surat:
+    get:
+      summary: Format Parameter Teks Surat Pernyataan Sembako
+      description: Mengambil template teks surat pernyataan komitmen 4 unsur komoditas pangan.
+      tags:
+        - Parameter Laporan
+      parameters:
+        - name: id_project
+          in: query
+          required: true
+          schema:
+            type: string
+            example: "PU"
+        - name: subfix
+          in: query
+          required: true
+          schema:
+            type: string
+            example: "1"
+      responses:
+        '200':
+          description: Template surat berhasil diambil
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ParamSuratResponseWrapper'
+
+  /health:
+    get:
+      summary: Health Check Sistem & Database
+      description: Memeriksa ketersediaan API dan koneksi ke database Microsoft SQL Server.
+      security: []
+      tags:
+        - Pemantauan
+      responses:
+        '200':
+          description: Sistem berjalan normal
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthCheckResponse'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Masukkan token JWT yang didapatkan dari endpoint /auth/login.
+
+  responses:
+    BadRequestError:
+      description: Parameter atau payload request tidak valid
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponseWrapper'
+    UnauthorizedError:
+      description: Token otentikasi tidak ada, kedaluwarsa, atau kredensial salah
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponseWrapper'
+    UpgradeRequiredError:
+      description: Versi aplikasi klien sudah usang dan wajib diperbarui
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponseWrapper'
+    NotFoundError:
+      description: Data tidak ditemukan
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponseWrapper'
+    BadGatewayError:
+      description: Kegagalan koneksi ke layanan upstream / WSO2 Gateway
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponseWrapper'
+    InternalServerError:
+      description: Terjadi kesalahan internal pada server database atau API
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponseWrapper'
+
+  schemas:
+    LoginRequestDTO:
+      type: object
+      required:
+        - user_id
+        - password
+        - app_version
+      properties:
+        user_id:
+          type: string
+          example: "12045"
+          description: User ID / ID Petugas loket pos.
+        password:
+          type: string
+          format: password
+          example: "p@ssw0rdLoket2026!"
+          description: Kata sandi akun petugas pos.
+        app_version:
+          type: string
+          example: "4.1.9"
+          description: Versi aplikasi klien saat ini.
+
+    PetugasProfileDTO:
+      type: object
+      properties:
+        id_petugas:
+          type: string
+          example: "12045"
+        nippos:
+          type: string
+          example: "987654321"
+        nama:
+          type: string
+          example: "AHMAD JUNAEDI"
+        nopend:
+          type: string
+          example: "40100"
+        kantor:
+          type: string
+          example: "KANTOR POS BANDUNG"
+        jabatan:
+          type: string
+          example: "MAN LAYANAN"
+
+    LoginResponseDTO:
+      type: object
+      properties:
+        token:
+          type: string
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        token_type:
+          type: string
+          example: "Bearer"
+        expires_in:
+          type: integer
+          example: 28800
+        user:
+          $ref: '#/components/schemas/PetugasProfileDTO'
+
+    DanomBatchRequestDTO:
+      type: object
+      required:
+        - kode_kelurahan
+        - nama_kelurahan
+        - kode_kecamatan
+        - nama_kecamatan
+        - kode_kabupaten
+        - nama_kabupaten
+        - kode_layanan
+      properties:
+        kode_kelurahan:
+          type: string
+          example: "3273010001"
+        nama_kelurahan:
+          type: string
+          example: "DAGO"
+        kode_kecamatan:
+          type: string
+          example: "327301"
+        nama_kecamatan:
+          type: string
+          example: "COBLONG"
+        kode_kabupaten:
+          type: string
+          example: "3273"
+        nama_kabupaten:
+          type: string
+          example: "KOTA BANDUNG"
+        kode_layanan:
+          type: string
+          example: "01"
+        kode_tahap:
+          type: string
+          example: "1"
+
+    DanomBeneficiaryDTO:
+      type: object
+      properties:
+        id_pelanggan:
+          type: string
+          example: "BST327301000100001"
+        nik:
+          type: string
+          example: "3273010101900001"
+        nama:
+          type: string
+          example: "BUDI SANTOSO"
+        alamat:
+          type: string
+          example: "JL. DAGO NO. 12 RT 01 RW 02"
+        alamat_ktp:
+          type: string
+          example: "JL. DAGO NO. 12 RT 01 RW 02"
+        nominal:
+          type: integer
+          example: 600000
+        batch:
+          type: string
+          example: "01"
+        bst:
+          type: string
+          example: "BST2026"
+        danom:
+          type: string
+          example: "DN-3273-0001"
+        regional:
+          type: string
+          example: "REGIONAL 2"
+        kprk:
+          type: string
+          example: "40000"
+        nama_kprk:
+          type: string
+          example: "BANDUNG"
+        kantor:
+          type: string
+          example: "40135"
+        nama_kantor:
+          type: string
+          example: "DAGO CABANG"
+        provinsi:
+          type: string
+          example: "JAWA BARAT"
+        kabupaten:
+          type: string
+          example: "KOTA BANDUNG"
+        kecamatan:
+          type: string
+          example: "COBLONG"
+        kelurahan:
+          type: string
+          example: "DAGO"
+        percentile:
+          type: string
+          example: "DESIL 1"
+        kode_header_danom:
+          type: string
+          example: "0"
+        kode_surat_pernyataan:
+          type: string
+          example: "1"
+
+    DanomStatusCetakRequestDTO:
+      type: object
+      required:
+        - kode_kelurahan
+        - jenis_dokumen
+        - total_records_dicetak
+      properties:
+        kode_kelurahan:
+          type: string
+          example: "3273010001"
+        jenis_dokumen:
+          type: string
+          enum: ["DANOM", "BUKTI_TERIMA", "SURAT_PERNYATAAN"]
+          example: "DANOM"
+        total_records_dicetak:
+          type: integer
+          example: 150
+        nama_file_bnba:
+          type: string
+          example: "BNBA_KOTA BANDUNG_DAGO_COBLONG_40100_150.csv"
+        waktu_cetak:
+          type: string
+          format: date-time
+
+    CdsCekNikRequestDTO:
+      type: object
+      required:
+        - nik
+      properties:
+        nik:
+          type: string
+          pattern: '^\d{16}$'
+          example: "3273011205850003"
+          description: Nomor Induk Kependudukan 16 digit penerima bantuan.
+
+    CdsBeneficiaryResponseDTO:
+      type: object
+      properties:
+        nik:
+          type: string
+          example: "3273011205850003"
+        id_pelanggan:
+          type: string
+          example: "BLT3273019999"
+        nama:
+          type: string
+          example: "SITI AMINAH"
+        alamat:
+          type: string
+          example: "JL. KEBON BIBIT NO. 45"
+        kuantitas:
+          type: integer
+          example: 1
+        nominal:
+          type: integer
+          example: 600000
+        bsu:
+          type: integer
+          example: 600000
+        nama_perusahaan:
+          type: string
+          example: "DAGO"
+        alamat_perusahaan:
+          type: string
+          example: "JL. DAGO ELOS"
+        header_danom:
+          type: string
+          example: "KEMENTERIAN TENAGA KERJA RI"
+        provinsi:
+          type: string
+          example: "JAWA BARAT"
+        kabupaten:
+          type: string
+          example: "KOTA BANDUNG"
+        kecamatan:
+          type: string
+          example: "COBLONG"
+        kelurahan:
+          type: string
+          example: "DAGO"
+
+    WilayahItemDTO:
+      type: object
+      properties:
+        kode_wilayah:
+          type: string
+          example: "3273"
+        nama_wilayah:
+          type: string
+          example: "KOTA BANDUNG"
+
+    LayananItemDTO:
+      type: object
+      properties:
+        kode_layanan:
+          type: string
+          example: "01"
+        nama_layanan:
+          type: string
+          example: "BANTUAN SOSIAL TUNAI (BST)"
+
+    TahapItemDTO:
+      type: object
+      properties:
+        kode_tahap:
+          type: string
+          example: "1"
+        nama_tahap:
+          type: string
+          example: "TAHAP 1"
+        periode:
+          type: string
+          example: "2026-01"
+
+    ParamSuratResponseDTO:
+      type: object
+      properties:
+        judul_surat:
+          type: string
+        klausul_pembuka:
+          type: string
+        butir_komitmen:
+          type: array
+          items:
+            type: string
+        klausul_penutup:
+          type: string
+
+    HealthCheckResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: "UP"
+        timestamp:
+          type: string
+          format: date-time
+        database:
+          type: object
+          properties:
+            status:
+              type: string
+              example: "CONNECTED"
+            rdbms:
+              type: string
+              example: "Microsoft SQL Server"
+            latency_ms:
+              type: integer
+              example: 12
+        memory:
+          type: object
+          properties:
+            allocated_mb:
+              type: number
+            system_mb:
+              type: number
+
+    ErrorResponseWrapper:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        code:
+          type: integer
+          example: 400
+        error_code:
+          type: string
+          example: "ERR_VALIDATION_FAILED"
+        message:
+          type: string
+          example: "Validasi parameter gagal"
+        errors:
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+              message:
+                type: string
+        meta:
+          type: object
+          properties:
+            request_id:
+              type: string
+            timestamp:
+              type: string
+              format: date-time
+
+    LoginResponseWrapper:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        code:
+          type: integer
+          example: 200
+        message:
+          type: string
+        data:
+          $ref: '#/components/schemas/LoginResponseDTO'
+
+    UserProfileResponseWrapper:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        code:
+          type: integer
+          example: 200
+        message:
+          type: string
+        data:
+          $ref: '#/components/schemas/PetugasProfileDTO'
+
+    VersionCheckResponseWrapper:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        code:
+          type: integer
+          example: 200
+        data:
+          type: object
+          properties:
+            is_latest:
+              type: boolean
+            current_version:
+              type: string
+            latest_version:
+              type: string
+            mandatory_update:
+              type: boolean
+            download_url:
+              type: string
+
+    LayananListResponseWrapper:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/LayananItemDTO'
+
+    TahapListResponseWrapper:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/TahapItemDTO'
+
+    WilayahListResponseWrapper:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/WilayahItemDTO'
+
+    DanomBatchResponseWrapper:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+          properties:
+            total_records:
+              type: integer
+            kode_kelurahan:
+              type: string
+            nama_kelurahan:
+              type: string
+            items:
+              type: array
+              items:
+                $ref: '#/components/schemas/DanomBeneficiaryDTO'
+
+    CdsBeneficiaryResponseWrapper:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          $ref: '#/components/schemas/CdsBeneficiaryResponseDTO'
+
+    ParamSuratResponseWrapper:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          $ref: '#/components/schemas/ParamSuratResponseDTO'
+
+    GenericSuccessResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        code:
+          type: integer
+          example: 200
+        message:
+          type: string
+          example: "Operasi berhasil"
+
