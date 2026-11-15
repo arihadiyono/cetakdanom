@@ -1,6 +1,8 @@
 ## Visual Studio / .NET
 [Bb]in/
 [Oo]bj/
+[Dd]ist/
+[Pp]ublish/
 [Ll]og/
 [Ll]ogs/
 .vs/

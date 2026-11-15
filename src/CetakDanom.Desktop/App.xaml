@@ -19,6 +19,8 @@
         <Color x:Key="NavySlateColor">#1E293B</Color>
         <Color x:Key="BgSlateColor">#F1F5F9</Color>
         <Color x:Key="BorderColor">#E2E8F0</Color>
+        <Color x:Key="BorderSlateColor">#E2E8F0</Color>
+        <Color x:Key="SuccessGreenColor">#16A34A</Color>
         <Color x:Key="TextDarkColor">#0F172A</Color>
         <Color x:Key="TextMutedColor">#64748B</Color>
 
@@ -28,6 +30,8 @@
         <SolidColorBrush x:Key="NavySlateBrush" Color="{StaticResource NavySlateColor}"/>
         <SolidColorBrush x:Key="BgSlateBrush" Color="{StaticResource BgSlateColor}"/>
         <SolidColorBrush x:Key="BorderBrush" Color="{StaticResource BorderColor}"/>
+        <SolidColorBrush x:Key="BorderSlateBrush" Color="{StaticResource BorderSlateColor}"/>
+        <SolidColorBrush x:Key="SuccessGreenBrush" Color="{StaticResource SuccessGreenColor}"/>
         <SolidColorBrush x:Key="TextDarkBrush" Color="{StaticResource TextDarkColor}"/>
         <SolidColorBrush x:Key="TextMutedBrush" Color="{StaticResource TextMutedColor}"/>
 
@@ -139,6 +143,14 @@
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
+        </Style>
+
+        <!-- Form Label Style -->
+        <Style x:Key="FormLabelStyle" TargetType="TextBlock">
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Foreground" Value="{StaticResource TextDarkBrush}"/>
+            <Setter Property="Margin" Value="0,0,0,4"/>
         </Style>
 
         <!-- Card Container Style -->

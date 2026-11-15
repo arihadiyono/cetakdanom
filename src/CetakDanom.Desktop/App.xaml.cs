@@ -21,6 +21,22 @@ public partial class App : WpfApp
     {
         base.OnStartup(e);
 
+        DispatcherUnhandledException += (s, args) =>
+        {
+            MessageBox.Show($"Terjadi kesalahan UI tak terduga:\n{args.Exception.Message}\n\n{args.Exception.StackTrace}",
+                "Fatal UI Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            args.Handled = true;
+        };
+
+        AppDomain.CurrentDomain.UnhandledException += (s, args) =>
+        {
+            if (args.ExceptionObject is Exception ex)
+            {
+                MessageBox.Show($"Kesalahan fatal sistem:\n{ex.Message}\n\n{ex.StackTrace}",
+                    "Critical Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        };
+
         var services = new ServiceCollection();
         ConfigureServices(services);
         _serviceProvider = services.BuildServiceProvider();
@@ -66,22 +82,32 @@ public partial class App : WpfApp
 
         var loginVm = _serviceProvider.GetRequiredService<LoginViewModel>();
         var loginWindow = new LoginView(loginVm);
+        MainWindow = loginWindow;
 
         loginVm.LoginSucceeded += async () =>
         {
-            var mainVm = _serviceProvider.GetRequiredService<MainViewModel>();
-            await mainVm.InitializeAsync();
-
-            var mainWindow = new MainView(mainVm);
-            mainWindow.Show();
-
-            mainVm.RequestLogout += () =>
+            try
             {
-                mainWindow.Close();
-                ShowLoginWindow();
-            };
+                var mainVm = _serviceProvider.GetRequiredService<MainViewModel>();
+                await mainVm.InitializeAsync();
 
-            loginWindow.Close();
+                var mainWindow = new MainView(mainVm);
+                MainWindow = mainWindow;
+                mainWindow.Show();
+
+                mainVm.RequestLogout += () =>
+                {
+                    mainWindow.Close();
+                    ShowLoginWindow();
+                };
+
+                loginWindow.Close();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Terjadi kesalahan saat memuat menu utama:\n{ex.Message}\n\nDetail:\n{ex.StackTrace}",
+                    "Kesalahan Sistem", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         };
 
         loginWindow.Show();
