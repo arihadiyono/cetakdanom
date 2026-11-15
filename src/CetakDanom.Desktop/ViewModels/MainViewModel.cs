@@ -8,12 +8,15 @@ namespace CetakDanom.Desktop.ViewModels;
 public class MainViewModel : ViewModelBase
 {
     private readonly IAuthenticationService _authService;
-    private readonly DashboardHomeViewModel _homeVm;
-    private readonly DanomViewModel _danomVm;
+    private readonly UnduhDanomViewModel _unduhDanomVm;
+    private readonly CetakDanomViewModel _cetakDanomVm;
+    private readonly CetakSuratViewModel _cetakSuratVm;
+    private readonly CetakDanomSatuanViewModel _cdsVm;
     private readonly PrintPreviewViewModel _printVm;
 
     private ViewModelBase _currentViewModel;
-    private string _currentPageTitle = "Dashboard Utama";
+    private string _currentPageTitle = "Unduh Danom";
+    private ViewModelBase? _previousViewModel;
 
     public Petugas? CurrentPetugas => _authService.CurrentPetugas;
     public string AppTitle => "CETAKDANOM FDPOS MODERN";
@@ -32,44 +35,59 @@ public class MainViewModel : ViewModelBase
         set => SetProperty(ref _currentPageTitle, value);
     }
 
-    public ICommand NavigateHomeCommand { get; }
-    public ICommand NavigateDanomCommand { get; }
-    public ICommand NavigatePrintCommand { get; }
+    // 4 Menu Utama Navigasi Sesuai Alur Delphi Asli
+    public ICommand NavigateUnduhDanomCommand { get; }
+    public ICommand NavigateCetakDanomCommand { get; }
+    public ICommand NavigateCetakSuratCommand { get; }
+    public ICommand NavigateCdsCommand { get; }
     public ICommand LogoutCommand { get; }
 
     public event Action? RequestLogout;
 
     public MainViewModel(
         IAuthenticationService authService,
-        DashboardHomeViewModel homeVm,
-        DanomViewModel danomVm,
+        UnduhDanomViewModel unduhDanomVm,
+        CetakDanomViewModel cetakDanomVm,
+        CetakSuratViewModel cetakSuratVm,
+        CetakDanomSatuanViewModel cdsVm,
         PrintPreviewViewModel printVm)
     {
         _authService = authService;
-        _homeVm = homeVm;
-        _danomVm = danomVm;
+        _unduhDanomVm = unduhDanomVm;
+        _cetakDanomVm = cetakDanomVm;
+        _cetakSuratVm = cetakSuratVm;
+        _cdsVm = cdsVm;
         _printVm = printVm;
 
-        _currentViewModel = _homeVm;
+        // Default menu awal setelah login: Menu 1 (Unduh Danom) - Tanpa Dashboard
+        _currentViewModel = _unduhDanomVm;
 
-        NavigateHomeCommand = new RelayCommand(async () =>
+        NavigateUnduhDanomCommand = new RelayCommand(async () =>
         {
-            CurrentPageTitle = "Dashboard Utama";
-            CurrentViewModel = _homeVm;
-            await _homeVm.InitializeAsync();
+            CurrentPageTitle = "1. Unduh Danom (Penarikan Data Wilayah)";
+            CurrentViewModel = _unduhDanomVm;
+            await _unduhDanomVm.InitializeAsync();
         });
 
-        NavigateDanomCommand = new RelayCommand(async () =>
+        NavigateCetakDanomCommand = new RelayCommand(async () =>
         {
-            CurrentPageTitle = "Pengelolaan Danom & Ekspor BNBA";
-            CurrentViewModel = _danomVm;
-            await _danomVm.InitializeAsync();
+            CurrentPageTitle = "2. Cetak Danom & Ekspor BNBA";
+            CurrentViewModel = _cetakDanomVm;
+            await _cetakDanomVm.InitializeAsync();
         });
 
-        NavigatePrintCommand = new RelayCommand(() =>
+        NavigateCetakSuratCommand = new RelayCommand(async () =>
         {
-            CurrentPageTitle = "Pratinjau & Validasi Dokumen Cetak";
-            CurrentViewModel = _printVm;
+            CurrentPageTitle = "3. Cetak Surat Pemberitahuan KPM";
+            CurrentViewModel = _cetakSuratVm;
+            await _cetakSuratVm.InitializeAsync();
+        });
+
+        NavigateCdsCommand = new RelayCommand(async () =>
+        {
+            CurrentPageTitle = "4. Cetak Danom Satuan (CDS Loket)";
+            CurrentViewModel = _cdsVm;
+            await _cdsVm.InitializeAsync();
         });
 
         LogoutCommand = new RelayCommand(() =>
@@ -78,33 +96,54 @@ public class MainViewModel : ViewModelBase
             RequestLogout?.Invoke();
         });
 
-        // Wire sub-viewmodel events
-        _homeVm.RequestNavigateToDanom += async () =>
+        // Wire event handlers
+        _unduhDanomVm.RequestNavigateToCetakDanom += async () =>
         {
-            CurrentPageTitle = "Pengelolaan Danom & Ekspor BNBA";
-            CurrentViewModel = _danomVm;
-            await _danomVm.InitializeAsync();
+            CurrentPageTitle = "2. Cetak Danom & Ekspor BNBA";
+            CurrentViewModel = _cetakDanomVm;
+            await _cetakDanomVm.InitializeAsync();
         };
 
-        _danomVm.RequestPrintPreview += (doc) =>
+        _cetakDanomVm.RequestPrintPreview += (doc) =>
         {
-            CurrentPageTitle = $"Pratinjau: {doc.Title}";
+            _previousViewModel = _cetakDanomVm;
+            CurrentPageTitle = $"Pratinjau Dokumen: {doc.Title}";
+            _printVm.LoadDocument(doc);
+            CurrentViewModel = _printVm;
+        };
+
+        _cetakSuratVm.RequestPrintPreview += (doc) =>
+        {
+            _previousViewModel = _cetakSuratVm;
+            CurrentPageTitle = $"Pratinjau Surat: {doc.Title}";
+            _printVm.LoadDocument(doc);
+            CurrentViewModel = _printVm;
+        };
+
+        _cdsVm.RequestPrintPreview += (doc) =>
+        {
+            _previousViewModel = _cdsVm;
+            CurrentPageTitle = $"Pratinjau Bukti Terima CDS: {doc.Title}";
             _printVm.LoadDocument(doc);
             CurrentViewModel = _printVm;
         };
 
         _printVm.RequestBack += () =>
         {
-            CurrentPageTitle = "Pengelolaan Danom & Ekspor BNBA";
-            CurrentViewModel = _danomVm;
+            CurrentViewModel = _previousViewModel ?? _cetakDanomVm;
+            CurrentPageTitle = _previousViewModel switch
+            {
+                CetakSuratViewModel => "3. Cetak Surat Pemberitahuan KPM",
+                CetakDanomSatuanViewModel => "4. Cetak Danom Satuan (CDS Loket)",
+                _ => "2. Cetak Danom & Ekspor BNBA"
+            };
         };
     }
 
     public async Task InitializeAsync()
     {
-        OnPropertyChanged(nameof(CurrentPetugas));
-        CurrentPageTitle = "Dashboard Utama";
-        CurrentViewModel = _homeVm;
-        await _homeVm.InitializeAsync();
+        CurrentPageTitle = "1. Unduh Danom (Penarikan Data Wilayah)";
+        CurrentViewModel = _unduhDanomVm;
+        await _unduhDanomVm.InitializeAsync();
     }
 }

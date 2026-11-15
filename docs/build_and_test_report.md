@@ -47,32 +47,40 @@ dotnet test "d:\CetakDanom\CetakDanom.sln" --logger "console;verbosity=detailed"
 ```
 
 **Ringkasan Eksekusi Pengujian**:
-* **Total Pengujian**: **15 Test Cases**
-* **Pengujian Lulus (*Passed*)**: **15** (100%)
+* **Total Pengujian**: **21 Test Cases**
+* **Pengujian Lulus (*Passed*)**: **21** (100%)
 * **Pengujian Gagal (*Failed*)**: **0**
-* **Total Waktu Eksekusi**: 1,16 detik
+* **Total Waktu Eksekusi**: ~0,25 detik
 
 ### Rincian Kasus Uji per Domain:
 
 #### A. Domain QR Code & Delimiter Pipa (`QrPayloadTests`)
-1. `BuildPayload_ShouldGenerateStrictSixPipeSegments` [LULUS - 1 ms]: Memastikan payload Barcode 2D terbagi tepat menjadi 6 segmen berpemisah pipa (`|`).
-2. `BuildPayload_ShouldSanitizeStrayPipesInAddressAndName_PreservingSixSegments` [LULUS - 8 ms]: Menguji neutralisasi karakter pipa liar di dalam teks alamat ("JL. MERDEKA | NO. 45") agar jumlah segmen tetap presisi 6 kolom saat diparsing scanner loket.
-3. `ValidatePayload_WithValidPayload_ReturnsTrue` [LULUS - 19 ms]: Memvalidasi payload sah menghasilkan status valid.
-4. `ValidatePayload_WithFewerSegments_ReturnsFalse` [LULUS - <1 ms]: Memastikan payload dengan segmen kurang (<6) ditolak oleh sistem.
-5. `ValidatePayload_WithInvalidNik_ReturnsFalse` [LULUS - <1 ms]: Memastikan payload dengan NIK non-numerik atau bukan 16 digit ditolak.
+1. `BuildPayload_ShouldGenerateStrictSixPipeSegments` [LULUS]: Memastikan payload Barcode 2D terbagi tepat menjadi 6 segmen berpemisah pipa (`|`).
+2. `BuildPayload_ShouldSanitizeStrayPipesInAddressAndName_PreservingSixSegments` [LULUS]: Menguji netralisasi karakter pipa liar di dalam teks alamat agar jumlah segmen tetap presisi 6 kolom saat diparsing scanner loket pos.
+3. `ValidatePayload_WithValidPayload_ReturnsTrue` [LULUS]: Memvalidasi payload sah menghasilkan status valid.
+4. `ValidatePayload_WithFewerSegments_ReturnsFalse` [LULUS]: Memastikan payload dengan segmen kurang (<6) ditolak oleh sistem.
+5. `ValidatePayload_WithInvalidNik_ReturnsFalse` [LULUS]: Memastikan payload dengan NIK non-numerik atau bukan 16 digit ditolak.
 
 #### B. Domain Ekspor BNBA CSV (`BnbaExportTests`)
-6. `BnbaRecord_Header_HasExact14ColumnsMatchingDelphi` [LULUS - <1 ms]: Memverifikasi bahwa header berkas CSV tepat memiliki 14 nama kolom standar Delphi.
-7. `BnbaRecord_ToCsvRow_MustPrefixNikAndDanomWithBacktick` [LULUS - 8 ms]: Memverifikasi bahwa baris CSV menambahkan tanda kutip backtick (`` ` ``) pada field NIK dan Danom.
-8. `BnbaExportService_ShouldCreateCsvFileAndValidateCount` [LULUS - 71 ms]: Menguji pembuatan fisik berkas CSV ke direktori lokal, memvalidasi integritas baris data dan ukuran berkas.
+6. `BnbaRecord_Header_HasExact14ColumnsMatchingDelphi` [LULUS]: Memverifikasi bahwa header berkas CSV tepat memiliki 14 nama kolom standar Delphi.
+7. `BnbaRecord_ToCsvRow_MustPrefixNikAndDanomWithBacktick` [LULUS]: Memverifikasi bahwa baris CSV menambahkan tanda kutip backtick (`` ` ``) pada field NIK dan Danom.
+8. `BnbaExportService_ShouldCreateCsvFileAndValidateCount` [LULUS]: Menguji pembuatan fisik berkas CSV ke direktori lokal, memvalidasi integritas baris data dan ukuran berkas.
 
 #### C. Domain Wilayah & Autentikasi (`WilayahAndAuthTests`)
-9. `WilayahRepository_ShouldReturnValidCascadingHierarchy` [LULUS - 13 ms]: Memverifikasi relasi hierarkis Provinsi Jawa Barat -> Kota Bandung -> Coblong -> Dago.
-10. `AuthenticationService_DemoAccount_ShouldLoginSuccessfully` [LULUS - 10 ms]: Menguji keberhasilan login akun demo `demo`/`demo123`, verifikasi profil petugas, NOPEND, dan status autentikasi.
-11. `AuthenticationService_WrongPassword_ShouldFail` [LULUS - 1 ms]: Menguji penolakan login saat kata sandi salah.
+9. `WilayahRepository_ShouldReturnValidCascadingHierarchy` [LULUS]: Memverifikasi relasi hierarkis Provinsi Jawa Barat -> Kota Bandung -> Coblong -> Dago.
+10. `AuthenticationService_DemoAccount_ShouldLoginSuccessfully` [LULUS]: Menguji keberhasilan login akun demo `demo`/`demo123`, verifikasi profil petugas, NOPEND, dan status autentikasi.
+11. `AuthenticationService_WrongPassword_ShouldFail` [LULUS]: Menguji penolakan login saat kata sandi salah.
 
 #### D. Domain Pengelolaan Danom (`DanomRepositoryTests`)
-12. `DanomRepository_ShouldFilterByKelurahanDago` [LULUS - 3 ms]: Menguji filter data berdasarkan kode kelurahan Dago.
-13. `DanomRepository_SearchByNameOrNik_ShouldReturnMatchingRecords` [LULUS - 1 ms]: Menguji pencarian teks bebas substring nama KPM ("BUDI").
-14. `DanomRepository_GetSummary_ShouldCalculateAccurateTotals` [LULUS - 7 ms]: Menguji kalkulasi metrik ringkasan Total KPM dan Total Rupiah.
-15. `DanomRepository_UpdateStatusCetakDanom_ShouldMarkRecordsAsSudahCetak` [LULUS - 20 ms]: Menguji transisi status cetak dari `BelumCetak` ke `SudahCetak` berserta penanda waktu audit.
+12. `DanomRepository_ShouldFilterByKelurahanDago` [LULUS]: Menguji filter data berdasarkan kode kelurahan Dago.
+13. `DanomRepository_SearchByNameOrNik_ShouldReturnMatchingRecords` [LULUS]: Menguji pencarian teks bebas substring nama KPM ("BUDI").
+14. `DanomRepository_GetSummary_ShouldCalculateAccurateTotals` [LULUS]: Menguji kalkulasi metrik ringkasan Total KPM dan Total Rupiah.
+15. `DanomRepository_UpdateStatusCetakDanom_ShouldMarkRecordsAsSudahCetak` [LULUS]: Menguji transisi status cetak dari `BelumCetak` ke `SudahCetak` berserta penanda waktu audit.
+
+#### E. Domain Cetak Surat & Integrasi CDS BLT (`SuratAndCdsTests`)
+16. `SuratService_GetAvailableParameters_ReturnsExpectedList` [LULUS]: Memvalidasi pemuatan katalog parameter surat `param_b<project>_<subfix>.pos` (BST, PKH, BLT, SEM).
+17. `SuratService_PrepareSuratPrintPreview_ContainsParameterClausesAndKpmInfo` [LULUS]: Menguji penggabungan template surat `param_xxx.pos` dengan data KPM, atribut logo, dan QR Code verifikasi.
+18. `CdsBltService_InquiryNik_PreRegistered_ReturnsCorrectData` [LULUS]: Menguji pemanggilan inquiry NIK DTKS terdaftar dan parsing respons data KPM, nominal, dan voucher.
+19. `CdsBltService_InquiryNik_ValidSixteenDigitDynamic_ReturnsSuccess` [LULUS]: Menguji inquiry NIK dinamis 16 digit menghasilkan data simulasi valid.
+20. `CdsBltService_InquiryNik_InvalidOrEmpty_ReturnsNull` [LULUS]: Memastikan inquiry dengan NIK kosong atau tidak valid (< 16 digit) ditolak.
+21. `CdsBltService_PrepareKuitansiCds_ValidatesSixSegmentQrPayload` [LULUS]: Memvalidasi pembuatan dokumen Kuitansi Tanda Terima CDS lengkap dengan payload QR Code 6 segmen berpemisah pipa.

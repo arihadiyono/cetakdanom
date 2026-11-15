@@ -1,4 +1,4 @@
-﻿<Application x:Class="CetakDanom.Desktop.App"
+<Application x:Class="CetakDanom.Desktop.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:converters="clr-namespace:CetakDanom.Desktop.Converters"
@@ -165,14 +165,26 @@
         </Style>
 
         <!-- View-ViewModel DataTemplates -->
-        <DataTemplate DataType="{x:Type viewmodels:DashboardHomeViewModel}">
-            <views:DashboardHomeView/>
+        <DataTemplate DataType="{x:Type viewmodels:UnduhDanomViewModel}">
+            <views:UnduhDanomView/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type viewmodels:CetakDanomViewModel}">
+            <views:CetakDanomView/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type viewmodels:CetakSuratViewModel}">
+            <views:CetakSuratView/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type viewmodels:CetakDanomSatuanViewModel}">
+            <views:CetakDanomSatuanView/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type viewmodels:PrintPreviewViewModel}">
+            <views:PrintPreviewView/>
         </DataTemplate>
         <DataTemplate DataType="{x:Type viewmodels:DanomViewModel}">
             <views:DanomView/>
         </DataTemplate>
-        <DataTemplate DataType="{x:Type viewmodels:PrintPreviewViewModel}">
-            <views:PrintPreviewView/>
+        <DataTemplate DataType="{x:Type viewmodels:DashboardHomeViewModel}">
+            <views:DashboardHomeView/>
         </DataTemplate>
     </Application.Resources>
 </Application>

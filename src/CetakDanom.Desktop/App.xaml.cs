@@ -1,4 +1,4 @@
-﻿using System.Windows;
+using System.Windows;
 using CetakDanom.Application.Interfaces;
 using CetakDanom.Desktop.ViewModels;
 using CetakDanom.Desktop.Views;
@@ -37,17 +37,27 @@ public partial class App : WpfApp
         services.AddTransient<IExportService, BnbaCsvExportService>();
         services.AddSingleton<IQrCodeService, QrCodeService>();
         services.AddTransient<IPrintService, MockPrintService>();
+        services.AddSingleton<ISuratService, MockSuratService>();
+        services.AddSingleton<ICdsBltService, MockCdsBltService>();
 
         // ViewModels
         services.AddTransient<LoginViewModel>();
         services.AddTransient<DashboardHomeViewModel>();
         services.AddTransient<DanomViewModel>();
+        services.AddTransient<UnduhDanomViewModel>();
+        services.AddTransient<CetakDanomViewModel>();
+        services.AddTransient<CetakSuratViewModel>();
+        services.AddTransient<CetakDanomSatuanViewModel>();
         services.AddTransient<PrintPreviewViewModel>();
         services.AddTransient<MainViewModel>();
 
         // Views
         services.AddTransient<LoginView>();
         services.AddTransient<MainView>();
+        services.AddTransient<UnduhDanomView>();
+        services.AddTransient<CetakDanomView>();
+        services.AddTransient<CetakSuratView>();
+        services.AddTransient<CetakDanomSatuanView>();
     }
 
     private void ShowLoginWindow()

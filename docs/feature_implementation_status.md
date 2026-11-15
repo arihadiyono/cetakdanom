@@ -1,72 +1,75 @@
 # Status Implementasi Fitur Prototipe (Fase 1) - CetakDanom
 
-Dokumen ini menyajikan status implementasi dari seluruh modul dan fitur yang dibangun pada **Fase 1 Desktop Prototype (C# WPF / .NET 8.0 LTS)** sesuai dengan kriteria yang ditetapkan pada spesifikasi tugas.
+Dokumen ini menyajikan status implementasi dari seluruh modul dan antarmuka operasional yang dibangun pada **Fase 1 Desktop Prototype (C# WPF / .NET 8.0 LTS)**. 
+
+Sesuai permintaan arahan operasional, antarmuka pengguna dirancang **sama persis dengan alur kerja aplikasi Delphi warisan** dengan **4 Menu Utama setelah Login** (tanpa dashboard).
 
 ---
 
-## 1. Matriks Status Implementasi Keseluruhan
+## 1. Matriks Status Implementasi 4 Menu Utama
 
-| Kode Modul | Nama Fitur / Komponen | Komponen UI (WPF) | Layanan / Abstraksi | Status Implementasi | Status Pengujian | Keterangan |
-| :--- | :--- | :--- | :--- | :---: | :---: | :--- |
-| **MOD-01** | **Login Petugas** | `LoginView.xaml`<br/>`LoginViewModel.cs` | `IAuthenticationService`<br/>`MockAuthenticationService` | **Fungsional (Simulasi)** | **Lulus Unit Test** | Mendukung 3 akun demo cepat (Bandung, Cimahi, SPV). Hashing MD5 produksi sengaja di-skip. |
-| **MOD-02** | **Main Dashboard** | `MainView.xaml`<br/>`DashboardHomeView.xaml` | `MainViewModel.cs`<br/>`DashboardHomeViewModel.cs` | **Fungsional Penuh** | **Lulus Verifikasi Visual** | Menampilkan profil petugas, NOPEND (40000), Kantor, 4 kartu metrik KPI, dan badge status DEMO. |
-| **MOD-03** | **Cascading Wilayah** | `DanomView.xaml`<br/>(ComboBox Grid) | `IWilayahRepository`<br/>`MockWilayahRepository` | **Fungsional Penuh** | **Lulus Unit Test** | Hierarki Provinsi -> Kabupaten -> Kecamatan -> Kelurahan. Reset otomatis ke bawah saat parent berubah. |
-| **MOD-04** | **Danom Data Grid** | `DanomView.xaml`<br/>(DataGrid &amp; Card) | `IDanomRepository`<br/>`MockDanomRepository` | **Fungsional Penuh** | **Lulus Unit Test** | Menampilkan NIK, Nama, Alamat, Kelurahan, Nominal, Tahap, Status Danom &amp; Bukti. Search &amp; Sort aktif. |
-| **MOD-05** | **Kalkulasi &amp; Ringkasan** | `DanomView.xaml`<br/>(Mini KPI Bar) | `IDanomRepository.GetSummaryAsync` | **Fungsional Penuh** | **Lulus Unit Test** | Menghitung otomatis Total KPM, Total Nominal Rupiah, Jumlah Siap Cetak, dan Sudah Cetak. |
-| **MOD-06** | **Drawer Detail KPM** | `DanomView.xaml`<br/>(Side Panel) | `SelectedPenerima` Binding | **Fungsional Penuh** | **Lulus Verifikasi Visual** | Menampilkan detail lengkap baris penerima yang dipilih pengguna pada tabel (ID Pelanggan, NIK, Alamat, dll). |
-| **MOD-07** | **Ekspor BNBA CSV** | `DanomViewModel.cs`<br/>(Tombol Ekspor) | `IExportService`<br/>`BnbaCsvExportService` | **Fungsional Penuh** | **Lulus Unit Test** | Mematuhi 14 kolom skema Delphi, pemisah titik koma (`;`), dan tanda kutip backtick (`` ` ``) pada NIK &amp; Danom. |
-| **MOD-08** | **Pratinjau Cetak Danom** | `PrintPreviewView.xaml`<br/>`PrintPreviewViewModel.cs` | `IPrintService.PrepareDanomPrintPreviewAsync` | **Fungsional (Pratinjau)** | **Lulus Verifikasi Visual** | Menerapkan aturan presisi ketat: **Maksimal 20 baris per halaman**, header berulang di tiap lembar. |
-| **MOD-09** | **Pratinjau Kuitansi BST** | `PrintPreviewView.xaml` | `IPrintService.PrepareBuktiTerimaPrintPreviewAsync` | **Fungsional (Pratinjau)** | **Lulus Verifikasi Visual** | Menampilkan lembar tanda terima kuitansi tunai, nominal terbilang, stempel waktu, dan panel QR Code. |
-| **MOD-10** | **Barcode 2D (QR Code)** | `PrintPreviewView.xaml`<br/>(Image &amp; Inspector) | `IQrCodeService`<br/>`QrCodeService` (QRCoder) | **Fungsional Penuh** | **Lulus Unit Test** | Mengodekan 6 segmen terpisah pipa (`\|`). Validasi ketat kontrak scanner loket &amp; neutralisasi pipa teks. |
-| **MOD-11** | **Surat Pernyataan (SPTJM)** | `PrintPreviewView.xaml` | `IPrintService.PrepareSuratPernyataanPrintPreviewAsync` | **Fungsional (Pratinjau)** | **Lulus Verifikasi Visual** | Menampilkan pakta integritas 4 unsur gizi pangan (Karbohidrat, Hewani, Nabati, Vitamin) untuk bansos sembako. |
+| No | Menu Operasional | Komponen View / ViewModel | Layanan / Abstraksi | Status Implementasi | Status Pengujian | Deskripsi Alur Bisnis |
+| :-: | :--- | :--- | :--- | :---: | :---: | :--- |
+| **0** | **Login Petugas** | `LoginView.xaml`<br/>`LoginViewModel.cs` | `IAuthenticationService`<br/>`MockAuthenticationService` | **Fungsional** | **Lulus Unit Test** | Validasi user/pass petugas loket pos, mode demo 3 akun (Bandung, Cimahi, SPV), langsung masuk ke Menu 1 tanpa dashboard. |
+| **1** | **Unduh Danom** | `UnduhDanomView.xaml`<br/>`UnduhDanomViewModel.cs` | `IWilayahRepository`<br/>`IDanomRepository` | **Fungsional Penuh** | **Lulus Unit Test** | Pemilihan parameter bertingkat (*cascading*): Jenis Bantuan, Nama Program, Tahap, Kabupaten, Kecamatan, Desa. Simulasi unduh data & log aktivitas `memLogProses`. |
+| **2** | **Cetak Danom** | `CetakDanomView.xaml`<br/>`CetakDanomViewModel.cs` | `IDanomRepository`<br/>`IExportService`<br/>`IPrintService` | **Fungsional Penuh** | **Lulus Unit Test** | Menampilkan tabel KPM, pencarian NIK/Nama, tombol **Buat BNBA** (CSV titik-koma & backtick NIK), **Pratinjau Format Danom** (20 baris/lembar), dan **Cetak Danom**. |
+| **3** | **Cetak Surat** | `CetakSuratView.xaml`<br/>`CetakSuratViewModel.cs` | `ISuratService`<br/>`MockSuratService` | **Fungsional Penuh** | **Lulus Unit Test** | Format surat pemberitahuan/undangan KPM resmi. Teks klausul dibaca dari file `param_xxx.pos` dan logo `logoxxx.jpg` / `logo_perusahaan.jpg`. Cetak satuan atau batch. |
+| **4** | **Cetak Danom Satuan (CDS)** | `CetakDanomSatuanView.xaml`<br/>`CetakDanomSatuanViewModel.cs` | `ICdsBltService`<br/>`MockCdsBltService`<br/>`IQrCodeService` | **Fungsional Penuh** | **Lulus Unit Test** | Mengadopsi pola aplikasi **`CDS.exe`**: Input NIK tunggal, tombol Ambil Data & Reset, panel rincian (Nama, NIK, BSU, No Voucher, Perusahaan), grid Bukti Terima, &Preview, dan &Cetak Kuitansi Loket (QR Code 6 segmen pipa). |
 
 ---
 
-## 2. Rincian Implementasi per Fitur
+## 2. Rincian Alur Bisnis per Menu
 
-### A. Fitur Login (MOD-01)
-* **Ketersediaan**: Terintegrasi pada form login awal aplikasi (`LoginView.xaml`).
-* **Akun Demo**:
-  1. `demo` / `demo123` -> Petugas Loket Utama (KCU Bandung 40000).
-  2. `petugas01` / `pos12345` -> Operator Cetak Danom (KCU Bandung 40000).
-  3. `supervisor` / `super123` -> Manajer Pelayanan Bansos (KCU Bandung 40000).
-* **Perilaku Validasi**:
-  * Menolak string kosong.
-  * Menampilkan pesan kesalahan berbahasa Indonesia jika password keliru.
-  * Menyediakan tombol *quick-fill* (1-Klik) untuk pengujian cepat asesor.
+### Menu 1: Unduh Danom (pnlAmbilData)
+- **Komponen Cascading**:
+  - `Jenis Layanan Bantuan`: BST, PKH, Sembako, BLT BBM, YAPI.
+  - `Tahap Penyaluran`: Tahap 1, 2, 3, 4.
+  - `Hierarki Wilayah`: Provinsi &rarr; Kabupaten/Kota &rarr; Kecamatan &rarr; Kelurahan/Desa.
+- **Proteksi Dependensi**: Pemilihan tingkat atas me-reset otomatis pilihan di bawahnya guna mencegah anomali data.
+- **Proses Penarikan Data**:
+  - Tombol `"TARIK / UNDUH DATA DANOM"` memicu proses sinkronisasi data dari server pusat.
+  - Progress bar dinamis (0% &rarr; 100%) dan kotak log memo (`memLogProses`) mencatat riwayat pemuatan parameter `param_xxx.pos`, eksekusi stored procedure, dan jumlah record yang tersimpan.
+  - Menyediakan tombol pintas `"Lanjut ke Menu 2: Cetak Danom →"` begitu unduhan selesai.
 
-### B. Fitur Dashboard (MOD-02)
-* **Status Bar**: Menampilkan secara persisten identitas petugas aktif, NIPPOS, kantor cabang pos, kode NOPEND wilayah kerja, serta badge peringatan oranye: `MODE DEMO / SYNTHETIC DATA`.
-* **Metrik Real-time**: 4 kartu metrik merangkum status dataset sintetis in-memory.
+### Menu 2: Cetak Danom (pnlTampilData)
+- **DataGrid KPM**: Menampilkan data nominatif penerima bantuan yang telah tersimpan di lokal (No Danom, NIK, Nama KPM, Alamat, Kelurahan, Nominal, Barcode, Status Cetak).
+- **Pencarian & Filter**: Pencarian instan teks bebas pada NIK atau Nama KPM, serta filter status cetak (*Belum Cetak* / *Sudah Cetak*).
+- **Pembuatan File BNBA (CSV)**:
+  - Format delimiter titik koma (`;`).
+  - Prefix karakter backtick (`` ` ``) pada field NIK dan Danom agar tidak terbaca sebagai notasi ilmiah (scientific notation) di Microsoft Excel.
+  - Tepat 14 kolom skema standar PT Pos Indonesia.
+- **Pencetakan Danom**: Menerapkan aturan presisi resmi: **Maksimal 20 baris data per lembar halaman**, berulang header kolom, dan rekapitulasi total nominal di lembar terakhir.
 
-### C. Fitur Cascading Wilayah (MOD-03)
-* **Alur Hirarkis**:
-  1. Pemilihan **Provinsi** (`JAWA BARAT` / `DKI JAKARTA`).
-  2. Pilihan **Kabupaten** terisi otomatis (`KOTA BANDUNG`, `KOTA CIMAHI`, `KABUPATEN BANDUNG`).
-  3. Pilihan **Kecamatan** terisi sesuai Kabupaten (`COBLONG`, `SUKASARI`, dll.).
-  4. Pilihan **Kelurahan** terisi sesuai Kecamatan (`DAGO`, `LEBAKGEDE`, `SARIJADI`, dll.).
-* **Proteksi Reset Dependensi**:
-  * Jika pengguna mengganti Provinsi, ComboBox Kabupaten, Kecamatan, dan Kelurahan langsung di-reset otomatis menjadi kosong untuk mencegah anomali kueri silang wilayah.
+### Menu 3: Cetak Surat (PnlBuktiPernyataan / Surat KPM)
+- **Parameter Berkas `param_xxx.pos`**:
+  - Baris 1: Header / Judul Surat resmi (misal: `"SURAT PEMBERITAHUAN PENYALURAN BANTUAN SOSIAL TUNAI (BST)"`).
+  - Baris 2+: Klausul dan syarat dokumen wajib (Asli KTP-el, Kartu Keluarga, jadwal lokasi bayar di loket pos / komunitas).
+- **Pengikatan Gambar Logo**: Mendukung deteksi logo Pos Indonesia (`logo_perusahaan.jpg`) dan logo instansi/kementerian mitra (`logoxxx.jpg`).
+- **Pratinjau & Cetak**: Pratinjau surat live dengan nomor berkas, barcode verifikasi NIK, detail KPM, dan kolom tanda tangan ganda (Penerima & Kepala Kantor Pos).
 
-### D. Fitur Data Grid Danom (MOD-04, MOD-05, MOD-06)
-* **Koleksi Data**: Menampilkan dataset sintetis realistis KPM.
-* **Filter Interaktif**:
-  * Pencarian instan teks bebas pada input box (mencari substring Nama, NIK 16 digit, ID Pelanggan, atau Alamat).
-  * Filter berdasarkan status cetak Danom (`Belum Cetak` / `Sudah Cetak`).
-* **Kalkulasi Otomatis**: Baris ringkasan menghitung total uang tunai (BSU) yang wajib disediakan loket pos secara dinamis sesuai filter yang diterapkan.
+### Menu 4: Cetak Danom Satuan (Pola Aplikasi CDS.exe)
+- **Inquiry NIK Mandiri**: Operator loket menginput 16 digit NIK penerima susulan atau KPM individual.
+- **Validasi Ketat**: Jika NIK kosong, menampilkan peringatan `"NIK Tidak Boleh Kosong!!"`.
+- **Panel Rincian Data Penerima (Identik Form CDS)**:
+  - `NAMA LENGKAP KPM`
+  - `NIK KPM`
+  - `BESAR UANG / BSU` (Format nominal Rupiah tebal)
+  - `NO VOUCHER`
+  - `NAMA PERUSAHAAN / INSTANSI`
+  - `ALAMAT PERUSAHAAN / LOKASI`
+  - `HIERARKI WILAYAH` (Provinsi, Kabupaten/Kota, Kecamatan, Kelurahan)
+- **Grid Bukti Terima (`griddata_bt`)**: Menampilkan baris transaksi kuitansi yang siap dicairkan.
+- **Tombol Operasional Loket**:
+  - `&Preview`: Membuka pratinjau kuitansi tanda terima dengan stempel waktu, nominal terbilang, dan panel QR Code 2D.
+  - `&Cetak`: Mengirim kuitansi langsung ke printer loket.
+- **Validasi QR Code**: Menggunakan payload 6 segmen berpemisah pipa (`|`):
+  $$\text{Payload} = \text{IdPelanggan} \mid \text{Tahap} \mid \text{NIK} \mid \text{Nama} \mid \text{Alamat} \mid \text{Nominal}$$
 
-### E. Fitur Ekspor BNBA (MOD-07)
-* **Kesesuaian Kode Delphi**: Divalidasi langsung terhadap prosedur warisan `TFrm_Main.btn_BNBAClick`.
-* **Keluaran**: Menghasilkan berkas `Export_BNBA/BNBA_<LAYANAN>_THP<X>_<KELURAHAN>_<TIMESTAMP>.csv`.
-* **Preservasi Karakter**:
-  * Pemisah antar-kolom adalah titik koma (`;`).
-  * Field `NIK` dan nomor `DANOM` diberi awalan backtick (`` ` ``) agar tidak dirusak oleh Excel.
-  * Tepat 14 kolom data per baris.
+---
 
-### F. Fitur Pratinjau Dokumen & QR Code (MOD-08, MOD-09, MOD-10, MOD-11)
-* **Pratinjau Kertas Monospace**: Dokumen dicetak dengan format teks berbatas lebar tetap yang mencerminkan fisik kertas cetakan dot-matrix/inkjet kantor pos.
-* **Aturan 20 Baris Danom**: Menerapkan paging otomatis setiap 20 baris data dengan pengulangan header kolom dan penutup rekapitulasi total nominal di lembar terakhir.
-* **Inspeksi QR Code**:
-  * Panel inspektur menampilkan gambar bitmap QR Code hasil render library `QRCoder` (ECC Level M).
-  * Menampilkan string mentah payload berdelimitasi pipa (`|`).
-  * Menjalankan validasi otomatis untuk memastikan struktur barcode tepat terdiri dari 6 segmen yang siap dibaca oleh scanner barcode loket pos.
+## 3. Hasil Pengujian Unit Otomatis (xUnit)
+
+Seluruh logika bisnis, abstraksi service, validasi format, dan aturan delimitasi telah teruji secara otomatis pada proyek `CetakDanom.UnitTests`:
+- **Total Pengujian**: 21 Unit Test
+- **Status**: **100% Passed (0 Failed, 0 Skipped)**
+- **Waktu Eksekusi**: 167 ms

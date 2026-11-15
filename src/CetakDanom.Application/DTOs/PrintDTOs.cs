@@ -6,7 +6,9 @@ public enum DocumentType
 {
     DaftarNominatif,
     BuktiTerimaKuitansi,
-    SuratPernyataan
+    SuratPernyataan,
+    SuratPemberitahuan,
+    KuitansiCds
 }
 
 public class PrintPreviewDocument

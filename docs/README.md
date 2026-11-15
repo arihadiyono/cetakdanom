@@ -34,7 +34,7 @@ Seluruh temuan telah dianalisis dan disimpan ke dalam berkas Markdown terpisah p
 | **22** | [Pemetaan Aturan Bisnis (business_rule_mapping.md)](file:///d:/CetakDanom/docs/business_rule_mapping.md) | Matriks keterlacakan aturan bisnis Delphi warisan terhadap C# WPF: Preservasi backtick BNBA, aturan 20 baris Danom, dan delimitasi pipa QR Code. |
 | **23** | [Spesifikasi Data Tiruan (mock_data_specification.md)](file:///d:/CetakDanom/docs/mock_data_specification.md) | Dokumentasi 100% data sintetis tanpa PII produksi: Akun demo, program bansos (BST/PKH/Sembako), hierarki wilayah Jabar/DKI, dan 55 data KPM tiruan. |
 | **24** | [Analisis Kesenjangan & Batasan (known_gaps.md)](file:///d:/CetakDanom/docs/known_gaps.md) | Kesenjangan teknis Fase 1: Isolasi NCONN, simulasi autentikasi, bypass printer fisik passbook ESC/P, dan rencana transisi ke database terenkripsi SQLite. |
-| **25** | [Laporan Kompilasi & Pengujian Unit (build_and_test_report.md)](file:///d:/CetakDanom/docs/build_and_test_report.md) | Laporan resmi kompilasi .NET 8.0 SDK (0 Error, 0 Warning) dan hasil eksekusi 15 pengujian unit otomatis xUnit (100% Passed). |
+| **25** | [Laporan Kompilasi & Pengujian Unit (build_and_test_report.md)](file:///d:/CetakDanom/docs/build_and_test_report.md) | Laporan resmi kompilasi .NET 8.0 SDK (0 Error, 0 Warning) dan hasil eksekusi 21 pengujian unit otomatis xUnit (100% Passed). |
 | **26** | [Rekomendasi Tahap Lanjutan (next_phase_recommendations.md)](file:///d:/CetakDanom/docs/next_phase_recommendations.md) | Panduan teknis Fase 2: Opsi integrasi REST API Go vs driver NCONN, database lokal SQLite terenkripsi, driver WinSpool passbook, dan roadmap implementasi. |
 
 ---
