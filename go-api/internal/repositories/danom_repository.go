@@ -17,7 +17,9 @@ func NewDanomRepository(db *sql.DB) *DanomRepository {
 	return &DanomRepository{db: db}
 }
 
-// GetDanomList executes SIKAP_GET_DAFTARNOMINATIF_NAS_V2
+// GetDanomList executes the appropriate stored procedure based on project/jenis.
+// Projects registered in T_REFF_EXTEND_PROJECT (modern projects like PBBA, BD41) use V4 SPs,
+// while older projects (like SPK1) use V2 SPs.
 func (r *DanomRepository) GetDanomList(
 	ctx context.Context,
 	kelurahanId string,
@@ -27,21 +29,81 @@ func (r *DanomRepository) GetDanomList(
 	nopend string,
 	idPetugas string,
 	nippos string,
+	jenis string,
 ) (*models.DanomListResult, error) {
 	if sort == "" {
 		sort = "Nama"
 	}
 	if nopend == "" {
-		nopend = "40000"
+		nopend = "40005"
 	}
 	if idPetugas == "" {
-		idPetugas = "demo"
+		idPetugas = "asep"
 	}
 	if nippos == "" {
-		nippos = "987654321"
+		nippos = "000000000"
 	}
 
-	query := `EXEC SIKAP_GET_DAFTARNOMINATIF_NAS_V2 
+	spV4 := "SIKAP_GET_DAFTARNOMINATIF_NAS_V4"
+	spV2 := "SIKAP_GET_DAFTARNOMINATIF_NAS_V2"
+	jenisUpper := strings.ToUpper(strings.TrimSpace(jenis))
+	if strings.Contains(jenisUpper, "LOKAL") {
+		spV4 = "SIKAP_GET_DAFTARNOMINATIF_KOTAKAB_V4"
+		spV2 = "SIKAP_GET_DAFTARNOMINATIF_KOTAKAB_V2"
+	} else if strings.Contains(jenisUpper, "INSTANSI") || strings.Contains(jenisUpper, "LEMBAGA") {
+		spV4 = "SIKAP_GET_DAFTARNOMINATIF_INSTANSI_V4"
+		spV2 = "SIKAP_GET_DAFTARNOMINATIF_INSTANSI_V2"
+	}
+
+	// Check whether project exists in T_REFF_EXTEND_PROJECT
+	var isExtended int
+	_ = r.db.QueryRowContext(ctx, "SELECT CASE WHEN EXISTS (SELECT 1 FROM T_REFF_EXTEND_PROJECT WHERE IDPROJECT = @p1) THEN 1 ELSE 0 END", sql.Named("p1", projectId)).Scan(&isExtended)
+
+	var records []models.DanomRecipient
+	var totalNominal float64
+	var err error
+
+	if isExtended == 1 {
+		// Project is configured with modern extended features (logos, custom footer)
+		records, totalNominal, err = r.executeDanomSp(ctx, spV4, kelurahanId, batch, projectId, sort, nopend, idPetugas, nippos)
+		// Fallback to V2 if V4 produced 0 rows or error
+		if err != nil || len(records) == 0 {
+			recV2, totV2, errV2 := r.executeDanomSp(ctx, spV2, kelurahanId, batch, projectId, sort, nopend, idPetugas, nippos)
+			if errV2 == nil && len(recV2) > 0 {
+				records = recV2
+				totalNominal = totV2
+			}
+		}
+	} else {
+		// Legacy project without T_REFF_EXTEND_PROJECT entry (e.g. SPK1)
+		records, totalNominal, err = r.executeDanomSp(ctx, spV2, kelurahanId, batch, projectId, sort, nopend, idPetugas, nippos)
+		// Fallback to V4 if V2 produced 0 rows or error
+		if err != nil || len(records) == 0 {
+			recV4, totV4, errV4 := r.executeDanomSp(ctx, spV4, kelurahanId, batch, projectId, sort, nopend, idPetugas, nippos)
+			if errV4 == nil && len(recV4) > 0 {
+				records = recV4
+				totalNominal = totV4
+			}
+		}
+	}
+
+	if records == nil {
+		records = make([]models.DanomRecipient, 0)
+	}
+
+	return &models.DanomListResult{
+		Records:      records,
+		TotalKpm:     len(records),
+		TotalNominal: totalNominal,
+	}, nil
+}
+
+func (r *DanomRepository) executeDanomSp(
+	ctx context.Context,
+	spName string,
+	kelurahanId, batch, projectId, sort, nopend, idPetugas, nippos string,
+) ([]models.DanomRecipient, float64, error) {
+	query := fmt.Sprintf(`EXEC %s 
 		@IDKELURAHAN=@p1, 
 		@NOPEND=@p2, 
 		@ID_PETUGAS=@p3, 
@@ -49,7 +111,7 @@ func (r *DanomRepository) GetDanomList(
 		@OPT=@p5, 
 		@BATCH=@p6, 
 		@SORT=@p7, 
-		@ID_PROJECT=@p8`
+		@ID_PROJECT=@p8`, spName)
 
 	rows, err := r.db.QueryContext(ctx, query,
 		sql.Named("p1", kelurahanId),
@@ -62,12 +124,18 @@ func (r *DanomRepository) GetDanomList(
 		sql.Named("p8", projectId),
 	)
 	if err != nil {
-		return nil, fmt.Errorf("error executing SIKAP_GET_DAFTARNOMINATIF_NAS_V2: %w", err)
+		return nil, 0, fmt.Errorf("error executing %s: %w", spName, err)
 	}
 	defer rows.Close()
 
-	var records []models.DanomRecipient
+	cols, err := rows.Columns()
+	if err != nil {
+		return nil, 0, err
+	}
+
+	records := make([]models.DanomRecipient, 0)
 	var totalNominal float64
+	isV4 := len(cols) >= 36
 
 	for rows.Next() {
 		var (
@@ -79,21 +147,41 @@ func (r *DanomRepository) GetDanomList(
 			idProp, prop, idKprk, kprk, idKantor, kpc sql.NullString
 			rowBatch, regional, nik                   sql.NullString
 			bs1, bs2, msbayar, bs3                    sql.NullString
-			statusGaruda, labelTahap, headerDanom     sql.NullString
+			statusGaruda, labelTahap                  sql.NullString
+			logoDanom, logoPerusahaan, headerDanom    sql.NullString
+			footer                                    sql.NullString
 			rw, rt, desil, percentile                 sql.NullString
 		)
 
-		err := rows.Scan(
-			&idPelanggan, &pelanggan, &alamat, &alamatKtp, &amount, &kuantitas, &total,
-			&idKel, &kel, &idKec, &kec, &idKab, &kab,
-			&idProp, &prop, &idKprk, &kprk, &idKantor, &kpc,
-			&rowBatch, &regional, &nik,
-			&bs1, &bs2, &msbayar, &bs3,
-			&statusGaruda, &labelTahap, &headerDanom,
-			&rw, &rt, &desil, &percentile,
-		)
-		if err != nil {
-			return nil, fmt.Errorf("error scanning danom row: %w", err)
+		var scanErr error
+		if isV4 {
+			scanErr = rows.Scan(
+				&idPelanggan, &pelanggan, &alamat, &alamatKtp, &amount, &kuantitas, &total,
+				&idKel, &kel, &idKec, &kec, &idKab, &kab,
+				&idProp, &prop, &idKprk, &kprk, &idKantor, &kpc,
+				&rowBatch, &regional, &nik,
+				&bs1, &bs2, &msbayar, &bs3,
+				&statusGaruda, &labelTahap,
+				&logoDanom, &logoPerusahaan, &headerDanom,
+				&footer,
+				&rw, &rt, &desil, &percentile,
+			)
+		} else {
+			// V2 column structure (33 columns)
+			scanErr = rows.Scan(
+				&idPelanggan, &pelanggan, &alamat, &alamatKtp, &amount, &kuantitas, &total,
+				&idKel, &kel, &idKec, &kec, &idKab, &kab,
+				&idProp, &prop, &idKprk, &kprk, &idKantor, &kpc,
+				&rowBatch, &regional, &nik,
+				&bs1, &bs2, &msbayar, &bs3,
+				&statusGaruda, &labelTahap,
+				&headerDanom,
+				&rw, &rt, &desil, &percentile,
+			)
+		}
+
+		if scanErr != nil {
+			return nil, 0, fmt.Errorf("error scanning row from %s: %w", spName, scanErr)
 		}
 
 		item := models.DanomRecipient{
@@ -129,22 +217,25 @@ func (r *DanomRepository) GetDanomList(
 		totalNominal += item.Nominal
 	}
 
-	return &models.DanomListResult{
-		Records:      records,
-		TotalKpm:     len(records),
-		TotalNominal: totalNominal,
-	}, nil
+	return records, totalNominal, nil
 }
 
-// InquiryNik retrieves one recipient record by NIK (for CDS Satuan)
+// InquiryNik inquiries a recipient by NIK
 func (r *DanomRepository) InquiryNik(ctx context.Context, nik string) (*models.CdsRecipientInquiry, error) {
-	// Search in active table T_PENERIMA_SPK_MB1
-	query := `SELECT TOP 1 
-		ID_PELANGGAN, NIK, NAMA, ALAMAT_DTKS, 
-		NMDESA_DTKS, NMKEC_DTKS, NMKAB_DTKS, NMPROP_DTKS, 
-		NOMINAL
-	FROM T_PENERIMA_SPK_MB1 
-	WHERE NIK = @p1`
+	query := `
+		SELECT TOP 1
+			ISNULL(id_pelanggan, '') AS id_pelanggan,
+			ISNULL(NIK, '') AS NIK,
+			ISNULL(NAMA, '') AS NAMA,
+			ISNULL(ALAMAT_DTKS, '') AS ALAMAT_DTKS,
+			ISNULL(NMDESA_DTKS, '') AS NMDESA_DTKS,
+			ISNULL(NMKEC_DTKS, '') AS NMKEC_DTKS,
+			ISNULL(NMKAB_DTKS, '') AS NMKAB_DTKS,
+			ISNULL(NMPROP_DTKS, '') AS NMPROP_DTKS,
+			ISNULL(NOMINAL, 0) AS NOMINAL
+		FROM T_PENERIMA_SPK_MBA
+		WHERE NIK = @p1
+	`
 
 	var (
 		idPelanggan, dbNik, nama, alamat sql.NullString

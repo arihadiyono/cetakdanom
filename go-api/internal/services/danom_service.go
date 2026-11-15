@@ -25,19 +25,24 @@ func (s *DanomService) GetDanomList(
 	nopend string,
 	idPetugas string,
 	nippos string,
+	jenis string,
 	searchQuery string,
 	page int,
 	pageSize int,
 ) (*models.DanomListResult, *models.Pagination, error) {
-	result, err := s.repo.GetDanomList(ctx, kelurahanId, batch, projectId, sort, nopend, idPetugas, nippos)
+	result, err := s.repo.GetDanomList(ctx, kelurahanId, batch, projectId, sort, nopend, idPetugas, nippos, jenis)
 	if err != nil {
 		return nil, nil, err
+	}
+
+	if result.Records == nil {
+		result.Records = make([]models.DanomRecipient, 0)
 	}
 
 	filtered := result.Records
 	if searchQuery != "" {
 		q := strings.ToUpper(strings.TrimSpace(searchQuery))
-		var matched []models.DanomRecipient
+		matched := make([]models.DanomRecipient, 0)
 		var totalNom float64
 		for _, r := range filtered {
 			if strings.Contains(strings.ToUpper(r.Nama), q) || strings.Contains(r.Nik, q) || strings.Contains(strings.ToUpper(r.Alamat), q) {
@@ -73,15 +78,13 @@ func (s *DanomService) GetDanomList(
 		}
 	} else {
 		paginatedRecords = filtered
-		pagination = &models.Pagination{
-			Page:         1,
-			PageSize:     totalRecords,
-			TotalRecords: totalRecords,
-			TotalPages:   1,
-		}
 	}
 
 	result.Records = paginatedRecords
+	if result.Records == nil {
+		result.Records = make([]models.DanomRecipient, 0)
+	}
+
 	return result, pagination, nil
 }
 

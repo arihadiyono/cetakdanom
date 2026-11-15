@@ -6,68 +6,68 @@
         xmlns:viewmodels="clr-namespace:CetakDanom.Desktop.ViewModels"
         mc:Ignorable="d"
         Title="Login - CetakDanom Modern FDPOS"
-        Height="620" Width="480"
+        Height="550" Width="440"
         WindowStartupLocation="CenterScreen"
-        ResizeMode="NoResize"
+        ResizeMode="CanMinimize"
         Background="{StaticResource BgSlateBrush}">
     
-    <Grid Margin="32">
-        <Border Style="{StaticResource CardBorderStyle}" Padding="28" VerticalAlignment="Center">
+    <Grid Margin="16">
+        <Border Style="{StaticResource CardBorderStyle}" Padding="20" VerticalAlignment="Center">
             <StackPanel>
                 <!-- Brand Header -->
-                <StackPanel HorizontalAlignment="Center" Margin="0,0,0,24">
-                    <Border Background="{StaticResource PosOrangeBrush}" CornerRadius="12" Width="56" Height="56" HorizontalAlignment="Center" Margin="0,0,0,12">
-                        <TextBlock Text="POS" Foreground="White" FontWeight="Bold" FontSize="18" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                <StackPanel HorizontalAlignment="Center" Margin="0,0,0,16">
+                    <Border Background="{StaticResource PosOrangeBrush}" CornerRadius="10" Width="44" Height="44" HorizontalAlignment="Center" Margin="0,0,0,8">
+                        <TextBlock Text="POS" Foreground="White" FontWeight="Bold" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                     </Border>
-                    <TextBlock Text="{Binding AppTitle}" FontWeight="Bold" FontSize="20" Foreground="{StaticResource NavyDarkBrush}" HorizontalAlignment="Center"/>
-                    <TextBlock Text="{Binding Subtitle}" FontSize="11" Foreground="{StaticResource TextMutedBrush}" TextWrapping="Wrap" TextAlignment="Center" Margin="0,4,0,0"/>
+                    <TextBlock Text="{Binding AppTitle}" FontWeight="Bold" FontSize="18" Foreground="{StaticResource NavyDarkBrush}" HorizontalAlignment="Center"/>
+                    <TextBlock Text="{Binding Subtitle}" FontSize="11" Foreground="{StaticResource TextMutedBrush}" TextWrapping="Wrap" TextAlignment="Center" Margin="0,2,0,0"/>
                 </StackPanel>
 
                 <!-- Status Badge -->
-                <Border Background="#FEF3C7" BorderBrush="#F59E0B" BorderThickness="1" CornerRadius="6" Padding="10,6" Margin="0,0,0,20">
-                    <TextBlock Text="MODE PROTOTYPE: Autentikasi disimulasikan (Mock Repository). Tidak terhubung ke database SQL Server produksi." 
-                               Foreground="#B45309" FontSize="11" TextWrapping="Wrap" TextAlignment="Center"/>
+                <Border Background="#ECFDF5" BorderBrush="#10B981" BorderThickness="1" CornerRadius="6" Padding="8,4" Margin="0,0,0,12">
+                    <TextBlock Text="Terhubung ke Basis Data SQL Server (DB_BLT) via Go REST API" 
+                               Foreground="#047857" FontSize="10" FontWeight="SemiBold" TextWrapping="Wrap" TextAlignment="Center"/>
                 </Border>
 
                 <!-- Input Fields -->
-                <TextBlock Text="ID Petugas / User ID" FontWeight="SemiBold" Margin="0,0,0,4"/>
-                <TextBox Text="{Binding UserId, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,14" Height="36"/>
+                <TextBlock Text="ID Petugas / User ID" FontWeight="SemiBold" FontSize="12" Margin="0,0,0,4"/>
+                <TextBox Text="{Binding UserId, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,10" Height="32"/>
 
-                <TextBlock Text="Kata Sandi / Password" FontWeight="SemiBold" Margin="0,0,0,4"/>
-                <TextBox Text="{Binding Password, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,16" Height="36"/>
+                <TextBlock Text="Kata Sandi / Password" FontWeight="SemiBold" FontSize="12" Margin="0,0,0,4"/>
+                <TextBox Text="{Binding Password, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,12" Height="32"/>
 
                 <!-- Error Message -->
-                <Border Background="#FEE2E2" BorderBrush="#EF4444" BorderThickness="1" CornerRadius="6" Padding="8" Margin="0,0,0,14"
+                <Border Background="#FEE2E2" BorderBrush="#EF4444" BorderThickness="1" CornerRadius="6" Padding="6" Margin="0,0,0,10"
                         Visibility="{Binding HasError, Converter={StaticResource BoolToVisConverter}}">
-                    <TextBlock Text="{Binding ErrorMessage}" Foreground="#B91C1C" FontSize="12" TextWrapping="Wrap"/>
+                    <TextBlock Text="{Binding ErrorMessage}" Foreground="#B91C1C" FontSize="11" TextWrapping="Wrap"/>
                 </Border>
 
                 <!-- Login Button -->
                 <Button Content="MASUK KE SISTEM" Style="{StaticResource PrimaryButtonStyle}" 
-                        Command="{Binding LoginCommand}" Height="42" Margin="0,0,0,16"/>
+                        Command="{Binding LoginCommand}" Height="38" Margin="0,0,0,12"/>
 
-                <Separator Margin="0,4,0,16"/>
+                <Separator Margin="0,2,0,10"/>
 
                 <!-- Demo Account Selector -->
-                <TextBlock Text="Pilih Akun Login TPETUGAS (1-Klik):" FontWeight="SemiBold" FontSize="11" Foreground="{StaticResource TextMutedBrush}" Margin="0,0,0,8"/>
-                <Grid Margin="0,0,0,8">
+                <TextBlock Text="Pilih Akun Login TPETUGAS (1-Klik):" FontWeight="SemiBold" FontSize="11" Foreground="{StaticResource TextMutedBrush}" Margin="0,0,0,6"/>
+                <Grid Margin="0,0,0,6">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
                     <Button Grid.Column="0" Content="asep (Pusat)" Style="{StaticResource SecondaryButtonStyle}" 
-                            FontSize="11" Margin="0,0,4,0" Command="{Binding FillDemoAccountCommand}"/>
+                            FontSize="10" Margin="0,0,3,0" Padding="2,4" Command="{Binding FillDemoAccountCommand}"/>
                     <Button Grid.Column="1" Content="10009kakp (Giro)" Style="{StaticResource SecondaryButtonStyle}" 
-                            FontSize="11" Margin="2,0,2,0" Command="{Binding FillPetugas01Command}"/>
+                            FontSize="10" Margin="2,0,2,0" Padding="2,4" Command="{Binding FillPetugas01Command}"/>
                     <Button Grid.Column="2" Content="10009loket01" Style="{StaticResource SecondaryButtonStyle}" 
-                            FontSize="11" Margin="4,0,0,0" Command="{Binding FillSupervisorCommand}"/>
+                            FontSize="10" Margin="3,0,0,0" Padding="2,4" Command="{Binding FillSupervisorCommand}"/>
                 </Grid>
 
                 <TextBlock Text="Akun DB_BLT: asep / 123 (Kantor: 40005 - WESELPOSPUSAT)" FontSize="10" Foreground="{StaticResource TextMutedBrush}" HorizontalAlignment="Center"/>
 
                 <!-- Footer Version -->
-                <TextBlock Text="{Binding AppVersion}" FontSize="11" Foreground="{StaticResource TextMutedBrush}" HorizontalAlignment="Center" Margin="0,20,0,0"/>
+                <TextBlock Text="{Binding AppVersion}" FontSize="10" Foreground="{StaticResource TextMutedBrush}" HorizontalAlignment="Center" Margin="0,10,0,0"/>
             </StackPanel>
         </Border>
     </Grid>

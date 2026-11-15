@@ -348,18 +348,21 @@ public class CetakDanomApiClient
         string projectId = "SPK1", 
         string sort = "Nama", 
         string search = "",
+        string jenis = "NASIONAL",
         int page = 0,
         int pageSize = 0,
         CancellationToken ct = default)
     {
-        var url = $"api/v1/danom?kelurahan_id={Uri.EscapeDataString(kelurahanId)}&batch={Uri.EscapeDataString(batch)}&project_id={Uri.EscapeDataString(projectId)}&sort={Uri.EscapeDataString(sort)}&search={Uri.EscapeDataString(search)}";
+        var url = $"api/v1/danom?kelurahan_id={Uri.EscapeDataString(kelurahanId)}&batch={Uri.EscapeDataString(batch)}&project_id={Uri.EscapeDataString(projectId)}&sort={Uri.EscapeDataString(sort)}&search={Uri.EscapeDataString(search)}&jenis={Uri.EscapeDataString(jenis)}";
         if (page > 0 && pageSize > 0)
         {
             url += $"&page={page}&page_size={pageSize}";
         }
 
         var res = await _httpClient.GetFromJsonAsync<ApiEnvelope<ApiDanomListDto>>(url, JsonOptions, ct);
-        return res?.Data ?? new ApiDanomListDto();
+        var data = res?.Data ?? new ApiDanomListDto();
+        data.Records ??= new List<ApiDanomRecipientDto>();
+        return data;
     }
 
     public async Task<CdsBltRecipientDto?> InquiryNikAsync(string nik, CancellationToken ct = default)

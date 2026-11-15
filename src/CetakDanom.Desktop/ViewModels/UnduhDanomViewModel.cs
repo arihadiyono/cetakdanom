@@ -354,18 +354,28 @@ public class UnduhDanomViewModel : ViewModelBase
         try
         {
             var data = await _danomRepo.GetPenerimaListAsync(filter);
+            data ??= new List<PenerimaBansos>();
 
             DownloadedCount = data.Count;
-            DownloadedNominal = data.Sum(d => d.Nominal);
+            DownloadedNominal = data.Count > 0 ? data.Sum(d => d.Nominal) : 0m;
 
             DownloadProgress = 100;
-            ProgressStatusText = $"Sukses! Berhasil mengunduh {DownloadedCount} data KPM.";
-            AddLog($"Berhasil mengunduh {DownloadedCount} record KPM.");
-            AddLog($"Total Nominal: Rp {DownloadedNominal:N0}");
-            AddLog($"Data tersimpan ke memori & lokal (Mode Cetak Danom siap).");
-            AddLog($"Status: SELESAI.");
-
-            IsDownloadCompleted = true;
+            if (DownloadedCount == 0)
+            {
+                ProgressStatusText = "Tidak ada data penerima (0 KPM) untuk parameter yang dipilih.";
+                AddLog($"DATA TIDAK ADA: Tidak ditemukan KPM pada basis data DB_BLT untuk Desa/Kel {SelectedDesa.Nama} ({rawDesaKode}), Batch {batchTahap}.");
+                AddLog("Status: SELESAI (0 KPM).");
+                IsDownloadCompleted = false;
+            }
+            else
+            {
+                ProgressStatusText = $"Sukses! Berhasil mengunduh {DownloadedCount} data KPM.";
+                AddLog($"Berhasil mengunduh {DownloadedCount} record KPM.");
+                AddLog($"Total Nominal: Rp {DownloadedNominal:N0}");
+                AddLog("Data tersimpan ke memori & penyimpanan lokal (Mode Cetak Danom siap).");
+                AddLog($"Status: SELESAI ({DownloadedCount} KPM).");
+                IsDownloadCompleted = true;
+            }
         }
         catch (Exception ex)
         {

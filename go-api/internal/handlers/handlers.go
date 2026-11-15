@@ -245,13 +245,17 @@ func (h *Handlers) GetDanomHandler(w http.ResponseWriter, r *http.Request) {
 	nopend := q.Get("nopend")
 	idPetugas := q.Get("id_petugas")
 	nippos := q.Get("nippos")
+	jenis := q.Get("jenis")
+	if jenis == "" {
+		jenis = "NASIONAL"
+	}
 	search := q.Get("search")
 
 	page, _ := strconv.Atoi(q.Get("page"))
 	pageSize, _ := strconv.Atoi(q.Get("page_size"))
 
 	result, pagination, err := h.danomService.GetDanomList(
-		ctx, kelurahanId, batch, projectId, sort, nopend, idPetugas, nippos, search, page, pageSize,
+		ctx, kelurahanId, batch, projectId, sort, nopend, idPetugas, nippos, jenis, search, page, pageSize,
 	)
 	if err != nil {
 		slog.Error("failed to get danom list", "error", err, "kelurahanId", kelurahanId, "batch", batch, "projectId", projectId)

@@ -4,8 +4,8 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              mc:Ignorable="d" 
-             d:DesignHeight="700" d:DesignWidth="1000">
-    <Grid Margin="24">
+             d:DesignHeight="600" d:DesignWidth="1000">
+    <Grid Margin="16,12">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/> <!-- Header / Instructions -->
             <RowDefinition Height="Auto"/> <!-- Parameter Selection Panel (pnlAmbilData style) -->
@@ -14,16 +14,16 @@
         </Grid.RowDefinitions>
 
         <!-- HEADER -->
-        <Border Grid.Row="0" Background="White" CornerRadius="8" Padding="16" Margin="0,0,0,16" BorderBrush="{StaticResource BorderSlateBrush}" BorderThickness="1">
+        <Border Grid.Row="0" Background="White" CornerRadius="8" Padding="12,10" Margin="0,0,0,10" BorderBrush="{StaticResource BorderSlateBrush}" BorderThickness="1">
             <StackPanel>
-                <TextBlock Text="MENU 1: UNDUH DANOM (PENARIKAN DATA PUSAT KE LOKAL)" FontSize="15" FontWeight="Bold" Foreground="{StaticResource NavyDarkBrush}"/>
-                <TextBlock Text="Pilih parameter bantuan dan hierarki wilayah untuk mengunduh dataset nominatif KPM. Data yang diunduh akan disimpan ke penyimpanan lokal terenkripsi (mendukung eksekusi Offline Mode F5)."
-                           Foreground="#64748B" FontSize="12" Margin="0,4,0,0" TextWrapping="Wrap"/>
+                <TextBlock Text="MENU 1: UNDUH DANOM (PENARIKAN DATA PUSAT KE LOKAL)" FontSize="14" FontWeight="Bold" Foreground="{StaticResource NavyDarkBrush}"/>
+                <TextBlock Text="Pilih parameter bantuan dan hierarki wilayah untuk mengunduh dataset nominatif KPM dari database SQL Server DB_BLT."
+                           Foreground="#64748B" FontSize="11" Margin="0,2,0,0" TextWrapping="Wrap"/>
             </StackPanel>
         </Border>
 
         <!-- PARAMETER SELECTION PANEL (pnlAmbilData Delphi Style) -->
-        <Border Grid.Row="1" Background="White" CornerRadius="8" Padding="20" Margin="0,0,0,16" BorderBrush="{StaticResource BorderSlateBrush}" BorderThickness="1">
+        <Border Grid.Row="1" Background="White" CornerRadius="8" Padding="14,10" Margin="0,0,0,10" BorderBrush="{StaticResource BorderSlateBrush}" BorderThickness="1">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
@@ -36,41 +36,41 @@
                 </Grid.ColumnDefinitions>
 
                 <!-- Row 0: Jenis Bansos, Project, Tahap -->
-                <StackPanel Grid.Row="0" Grid.Column="0" Margin="0,0,16,16">
-                    <TextBlock Text="Jenis Bansos *" Style="{StaticResource FormLabelStyle}"/>
-                    <ComboBox ItemsSource="{Binding JenisBansosList}" SelectedItem="{Binding SelectedJenisBansos}" Height="36"/>
+                <StackPanel Grid.Row="0" Grid.Column="0" Margin="0,0,12,10">
+                    <TextBlock Text="Jenis Bansos *" Style="{StaticResource FormLabelStyle}" Margin="0,0,0,3"/>
+                    <ComboBox ItemsSource="{Binding JenisBansosList}" SelectedItem="{Binding SelectedJenisBansos}" Height="30"/>
                 </StackPanel>
 
-                <StackPanel Grid.Row="0" Grid.Column="1" Margin="0,0,16,16">
-                    <TextBlock Text="Project / Nama Bantuan *" Style="{StaticResource FormLabelStyle}"/>
-                    <ComboBox ItemsSource="{Binding ProjectList}" SelectedItem="{Binding SelectedProject}" DisplayMemberPath="Nama" Height="36"/>
+                <StackPanel Grid.Row="0" Grid.Column="1" Margin="0,0,12,10">
+                    <TextBlock Text="Project / Nama Bantuan *" Style="{StaticResource FormLabelStyle}" Margin="0,0,0,3"/>
+                    <ComboBox ItemsSource="{Binding ProjectList}" SelectedItem="{Binding SelectedProject}" DisplayMemberPath="Nama" Height="30"/>
                 </StackPanel>
 
-                <StackPanel Grid.Row="0" Grid.Column="2" Margin="0,0,0,16">
-                    <TextBlock Text="Tahap Penyaluran *" Style="{StaticResource FormLabelStyle}"/>
-                    <ComboBox ItemsSource="{Binding TahapList}" SelectedItem="{Binding SelectedTahap}" DisplayMemberPath="Display" Height="36"/>
+                <StackPanel Grid.Row="0" Grid.Column="2" Margin="0,0,0,10">
+                    <TextBlock Text="Tahap Penyaluran *" Style="{StaticResource FormLabelStyle}" Margin="0,0,0,3"/>
+                    <ComboBox ItemsSource="{Binding TahapList}" SelectedItem="{Binding SelectedTahap}" DisplayMemberPath="Display" Height="30"/>
                 </StackPanel>
 
                 <!-- Row 1: Kabupaten, Kecamatan, Desa -->
-                <StackPanel Grid.Row="1" Grid.Column="0" Margin="0,0,16,0">
-                    <TextBlock Text="Kabupaten / Kota *" Style="{StaticResource FormLabelStyle}"/>
-                    <ComboBox ItemsSource="{Binding KabupatenList}" SelectedItem="{Binding SelectedKabupaten}" DisplayMemberPath="Nama" Height="36"/>
+                <StackPanel Grid.Row="1" Grid.Column="0" Margin="0,0,12,0">
+                    <TextBlock Text="Kabupaten / Kota *" Style="{StaticResource FormLabelStyle}" Margin="0,0,0,3"/>
+                    <ComboBox ItemsSource="{Binding KabupatenList}" SelectedItem="{Binding SelectedKabupaten}" DisplayMemberPath="Nama" Height="30"/>
                 </StackPanel>
 
-                <StackPanel Grid.Row="1" Grid.Column="1" Margin="0,0,16,0">
-                    <TextBlock Text="Kecamatan *" Style="{StaticResource FormLabelStyle}"/>
-                    <ComboBox ItemsSource="{Binding KecamatanList}" SelectedItem="{Binding SelectedKecamatan}" DisplayMemberPath="Nama" Height="36"/>
+                <StackPanel Grid.Row="1" Grid.Column="1" Margin="0,0,12,0">
+                    <TextBlock Text="Kecamatan *" Style="{StaticResource FormLabelStyle}" Margin="0,0,0,3"/>
+                    <ComboBox ItemsSource="{Binding KecamatanList}" SelectedItem="{Binding SelectedKecamatan}" DisplayMemberPath="Nama" Height="30"/>
                 </StackPanel>
 
                 <StackPanel Grid.Row="1" Grid.Column="2">
-                    <TextBlock Text="Desa / Kelurahan *" Style="{StaticResource FormLabelStyle}"/>
-                    <ComboBox ItemsSource="{Binding DesaList}" SelectedItem="{Binding SelectedDesa}" DisplayMemberPath="Nama" Height="36"/>
+                    <TextBlock Text="Desa / Kelurahan *" Style="{StaticResource FormLabelStyle}" Margin="0,0,0,3"/>
+                    <ComboBox ItemsSource="{Binding DesaList}" SelectedItem="{Binding SelectedDesa}" DisplayMemberPath="Nama" Height="30"/>
                 </StackPanel>
             </Grid>
         </Border>
 
         <!-- ACTION & PROGRESS PANEL -->
-        <Border Grid.Row="2" Background="White" CornerRadius="8" Padding="16" Margin="0,0,0,16" BorderBrush="{StaticResource BorderSlateBrush}" BorderThickness="1">
+        <Border Grid.Row="2" Background="White" CornerRadius="8" Padding="12,10" Margin="0,0,0,10" BorderBrush="{StaticResource BorderSlateBrush}" BorderThickness="1">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
@@ -79,41 +79,41 @@
                 </Grid.ColumnDefinitions>
 
                 <Button Grid.Column="0" Content="TARIK / UNDUH DATA DANOM" Style="{StaticResource PrimaryButtonStyle}" 
-                        Command="{Binding TarikDataCommand}" Padding="20,10" FontWeight="Bold" Margin="0,0,20,0"/>
+                        Command="{Binding TarikDataCommand}" Padding="16,8" FontWeight="Bold" Margin="0,0,16,0" Height="34"/>
 
                 <!-- Progress Section -->
                 <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                    <Grid Margin="0,0,0,6">
-                        <TextBlock Text="{Binding ProgressStatusText}" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource NavyDarkBrush}"/>
-                        <TextBlock Text="{Binding DownloadProgress, StringFormat='{}{0}%'}" FontSize="12" FontWeight="Bold" Foreground="{StaticResource PosOrangeBrush}" HorizontalAlignment="Right"/>
+                    <Grid Margin="0,0,0,4">
+                        <TextBlock Text="{Binding ProgressStatusText}" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource NavyDarkBrush}"/>
+                        <TextBlock Text="{Binding DownloadProgress, StringFormat='{}{0}%'}" FontSize="11" FontWeight="Bold" Foreground="{StaticResource PosOrangeBrush}" HorizontalAlignment="Right"/>
                     </Grid>
-                    <ProgressBar Height="12" Value="{Binding DownloadProgress}" Maximum="100" Foreground="{StaticResource PosOrangeBrush}" Background="#E2E8F0"/>
+                    <ProgressBar Height="10" Value="{Binding DownloadProgress}" Maximum="100" Foreground="{StaticResource PosOrangeBrush}" Background="#E2E8F0"/>
                 </StackPanel>
 
                 <!-- Button Jump to Cetak Danom when completed -->
                 <Button Grid.Column="2" Content="Lanjut ke Menu 2: Cetak Danom →" Style="{StaticResource SecondaryButtonStyle}" 
-                        Command="{Binding LanjutKeCetakDanomCommand}" Padding="16,10" Margin="20,0,0,0" FontWeight="Bold"
+                        Command="{Binding LanjutKeCetakDanomCommand}" Padding="14,8" Margin="16,0,0,0" FontWeight="Bold" Height="34"
                         IsEnabled="{Binding IsDownloadCompleted}"/>
             </Grid>
         </Border>
 
         <!-- LOG & RESULT MEMO (Meniru memLogProses pada Delphi Utama.pas) -->
-        <Border Grid.Row="3" Background="White" CornerRadius="8" Padding="16" BorderBrush="{StaticResource BorderSlateBrush}" BorderThickness="1">
+        <Border Grid.Row="3" Background="White" CornerRadius="8" Padding="12,10" BorderBrush="{StaticResource BorderSlateBrush}" BorderThickness="1" MinHeight="140">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="*"/>
                 </Grid.RowDefinitions>
 
-                <DockPanel Grid.Row="0" Margin="0,0,0,8">
-                    <TextBlock Text="Log Aktivitas Penarikan Data (memLogProses):" FontWeight="Bold" FontSize="12" Foreground="{StaticResource NavyDarkBrush}" VerticalAlignment="Center"/>
-                    <Button Content="Bersihkan Log" Style="{StaticResource SecondaryButtonStyle}" Command="{Binding ResetLogCommand}" HorizontalAlignment="Right" Padding="10,4" FontSize="11"/>
+                <DockPanel Grid.Row="0" Margin="0,0,0,6">
+                    <TextBlock Text="Log Aktivitas Penarikan Data (memLogProses):" FontWeight="Bold" FontSize="11" Foreground="{StaticResource NavyDarkBrush}" VerticalAlignment="Center"/>
+                    <Button Content="Bersihkan Log" Style="{StaticResource SecondaryButtonStyle}" Command="{Binding ResetLogCommand}" HorizontalAlignment="Right" Padding="8,3" FontSize="10"/>
                 </DockPanel>
 
-                <ListBox Grid.Row="1" ItemsSource="{Binding LogLines}" FontFamily="Consolas" FontSize="12" Background="#0F172A" Foreground="#38BDF8" BorderThickness="0" Padding="10">
+                <ListBox Grid.Row="1" ItemsSource="{Binding LogLines}" FontFamily="Consolas" FontSize="11" Background="#0F172A" Foreground="#38BDF8" BorderThickness="0" Padding="8" MinHeight="100">
                     <ListBox.ItemContainerStyle>
                         <Style TargetType="ListBoxItem">
-                            <Setter Property="Padding" Value="2"/>
+                            <Setter Property="Padding" Value="1"/>
                         </Style>
                     </ListBox.ItemContainerStyle>
                 </ListBox>

@@ -28,13 +28,16 @@ public class ApiDanomRepository : IDanomRepository
             projectId,
             sort,
             search,
+            "NASIONAL",
             0,
             0
         );
 
         _localCache.Clear();
 
-        var records = result.Records.Select(r => new PenerimaBansos
+        var rawRecords = result?.Records ?? new List<ApiDanomRecipientDto>();
+
+        var records = rawRecords.Select(r => new PenerimaBansos
         {
             IdPelanggan = r.IdPelanggan,
             Nik = r.Nik,
