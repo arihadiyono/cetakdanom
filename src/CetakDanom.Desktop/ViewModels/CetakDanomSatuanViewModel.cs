@@ -16,7 +16,7 @@ public class CetakDanomSatuanViewModel : ViewModelBase
     private readonly ICdsBltService _cdsService;
     private readonly IAuthenticationService _authService;
 
-    private string _inputNik = "3201012304850001";
+    private string _inputNik = "1116054107500066";
     private bool _isLoading;
     private string _statusMessage = "Masukkan 16 digit NIK lalu klik 'Ambil Data'.";
     private bool _hasData;

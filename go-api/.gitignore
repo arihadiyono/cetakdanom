@@ -1,0 +1,7 @@
+# Go API gitignore
+.env
+bin/
+*.exe
+*.dll
+*.so
+*.dylib

@@ -21,8 +21,8 @@ public class UnduhDanomViewModel : ViewModelBase
     private ObservableCollection<LayananBansos> _layananList = new();
     private LayananBansos? _selectedLayanan;
 
-    private ObservableCollection<string> _tahapList = new() { "1", "2", "3", "4" };
-    private string _selectedTahap = "1";
+    private ObservableCollection<string> _tahapList = new() { "M1-A04", "M1-A05", "M1-A06", "M1-A07", "M1-A08", "M1-A09", "M1-A10" };
+    private string _selectedTahap = "M1-A04";
 
     private ObservableCollection<Wilayah> _provinsiList = new();
     private Wilayah? _selectedProvinsi;

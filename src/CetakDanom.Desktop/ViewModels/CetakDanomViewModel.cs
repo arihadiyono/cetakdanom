@@ -153,8 +153,9 @@ public class CetakDanomViewModel : ViewModelBase
 
         var filter = new DanomFilterRequest
         {
-            LayananKode = "BST",
-            Tahap = "1"
+            LayananKode = "SPK1",
+            Tahap = "M1-A04",
+            KelurahanKode = "3273151001"
         };
         var records = await _danomRepo.GetPenerimaListAsync(filter);
         _allRecords = new ObservableCollection<PenerimaBansos>(records);

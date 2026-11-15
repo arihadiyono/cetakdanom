@@ -2,6 +2,7 @@ using System.Windows;
 using CetakDanom.Application.Interfaces;
 using CetakDanom.Desktop.ViewModels;
 using CetakDanom.Desktop.Views;
+using CetakDanom.Infrastructure.Api;
 using CetakDanom.Infrastructure.Export;
 using CetakDanom.Infrastructure.Mock;
 using CetakDanom.Infrastructure.Printing;
@@ -46,15 +47,16 @@ public partial class App : WpfApp
 
     private void ConfigureServices(IServiceCollection services)
     {
-        // Infrastructure & Application Services (Mock abstractions for Phase 1)
+        // Go REST API Client & Integrated Repositories (Connecting to Go REST API -> SQL Server)
+        services.AddSingleton<CetakDanomApiClient>();
         services.AddSingleton<IAuthenticationService, MockAuthenticationService>();
-        services.AddSingleton<IWilayahRepository, MockWilayahRepository>();
-        services.AddSingleton<IDanomRepository, MockDanomRepository>();
+        services.AddSingleton<IWilayahRepository, ApiWilayahRepository>();
+        services.AddSingleton<IDanomRepository, ApiDanomRepository>();
         services.AddTransient<IExportService, BnbaCsvExportService>();
         services.AddSingleton<IQrCodeService, QrCodeService>();
         services.AddTransient<IPrintService, MockPrintService>();
         services.AddSingleton<ISuratService, MockSuratService>();
-        services.AddSingleton<ICdsBltService, MockCdsBltService>();
+        services.AddSingleton<ICdsBltService, ApiCdsBltService>();
 
         // ViewModels
         services.AddTransient<LoginViewModel>();
