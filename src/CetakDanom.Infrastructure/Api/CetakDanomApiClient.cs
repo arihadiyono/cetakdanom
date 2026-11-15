@@ -72,6 +72,66 @@ public class ApiKelurahanDto
     public string KecamatanNama { get; set; } = string.Empty;
 }
 
+public class ApiLoginResponseDto
+{
+    [JsonPropertyName("idPetugas")]
+    public string IdPetugas { get; set; } = string.Empty;
+
+    [JsonPropertyName("nippos")]
+    public string Nippos { get; set; } = string.Empty;
+
+    [JsonPropertyName("nama")]
+    public string Nama { get; set; } = string.Empty;
+
+    [JsonPropertyName("nopend")]
+    public string Nopend { get; set; } = string.Empty;
+
+    [JsonPropertyName("kantor")]
+    public string Kantor { get; set; } = string.Empty;
+
+    [JsonPropertyName("jabatan")]
+    public string Jabatan { get; set; } = string.Empty;
+
+    [JsonPropertyName("status")]
+    public string Status { get; set; } = string.Empty;
+
+    [JsonPropertyName("token")]
+    public string Token { get; set; } = string.Empty;
+}
+
+public class ApiProjectDto
+{
+    [JsonPropertyName("idProject")]
+    public string IdProject { get; set; } = string.Empty;
+
+    [JsonPropertyName("deskripsi")]
+    public string Deskripsi { get; set; } = string.Empty;
+}
+
+public class ApiTahapRefDto
+{
+    [JsonPropertyName("idTahap")]
+    public string IdTahap { get; set; } = string.Empty;
+
+    [JsonPropertyName("ketTahap")]
+    public string KetTahap { get; set; } = string.Empty;
+}
+
+public class ApiDesaDto
+{
+    [JsonPropertyName("kode")]
+    public string Kode { get; set; } = string.Empty;
+
+    [JsonPropertyName("nama")]
+    public string Nama { get; set; } = string.Empty;
+
+    [JsonPropertyName("kecamatanId")]
+    public string KecamatanId { get; set; } = string.Empty;
+
+    [JsonPropertyName("kabupatenId")]
+    public string KabupatenId { get; set; } = string.Empty;
+}
+
 public class ApiDanomListDto
 {
     [JsonPropertyName("records")]
@@ -195,6 +255,58 @@ public class CetakDanomApiClient
         {
             return false;
         }
+    }
+
+    public async Task<ApiLoginResponseDto?> LoginAsync(string username, string password, string appVersion = "5.0.0", CancellationToken ct = default)
+    {
+        var payload = new { username, password, appVersion };
+        var response = await _httpClient.PostAsJsonAsync("api/v1/auth/login", payload, JsonOptions, ct);
+        if (!response.IsSuccessStatusCode)
+        {
+            var err = await response.Content.ReadFromJsonAsync<ApiEnvelope<object>>(JsonOptions, ct);
+            throw new HttpRequestException(err?.Message ?? $"Login gagal (HTTP {(int)response.StatusCode})");
+        }
+        var result = await response.Content.ReadFromJsonAsync<ApiEnvelope<ApiLoginResponseDto>>(JsonOptions, ct);
+        return result?.Data;
+    }
+
+    public async Task<List<ApiProjectDto>> GetProjectsAsync(string jenis = "NASIONAL", CancellationToken ct = default)
+    {
+        var url = $"api/v1/reference/project?jenis={Uri.EscapeDataString(jenis)}";
+        var res = await _httpClient.GetFromJsonAsync<ApiEnvelope<List<ApiProjectDto>>>(url, JsonOptions, ct);
+        return res?.Data ?? new List<ApiProjectDto>();
+    }
+
+    public async Task<List<ApiTahapRefDto>> GetTahapAsync(string jenis, string projectId, CancellationToken ct = default)
+    {
+        var url = $"api/v1/reference/tahap?jenis={Uri.EscapeDataString(jenis)}&project_id={Uri.EscapeDataString(projectId)}";
+        var res = await _httpClient.GetFromJsonAsync<ApiEnvelope<List<ApiTahapRefDto>>>(url, JsonOptions, ct);
+        return res?.Data ?? new List<ApiTahapRefDto>();
+    }
+
+    public async Task<List<ApiKabupatenDto>> GetAllKabupatenAsync(CancellationToken ct = default)
+    {
+        var url = "api/v1/reference/kabupaten";
+        var res = await _httpClient.GetFromJsonAsync<ApiEnvelope<List<ApiKabupatenDto>>>(url, JsonOptions, ct);
+        return res?.Data ?? new List<ApiKabupatenDto>();
+    }
+
+    public async Task<List<ApiKecamatanDto>> GetKecamatanByKabupatenAsync(string kabupatenId, CancellationToken ct = default)
+    {
+        var url = $"api/v1/reference/kecamatan?kabupaten_id={Uri.EscapeDataString(kabupatenId)}";
+        var res = await _httpClient.GetFromJsonAsync<ApiEnvelope<List<ApiKecamatanDto>>>(url, JsonOptions, ct);
+        return res?.Data ?? new List<ApiKecamatanDto>();
+    }
+
+    public async Task<List<ApiDesaDto>> GetDesaByKecamatanAsync(string kecamatanId, string kabupatenId = "", CancellationToken ct = default)
+    {
+        var url = $"api/v1/reference/desa?kecamatan_id={Uri.EscapeDataString(kecamatanId)}";
+        if (!string.IsNullOrEmpty(kabupatenId))
+        {
+            url += $"&kabupaten_id={Uri.EscapeDataString(kabupatenId)}";
+        }
+        var res = await _httpClient.GetFromJsonAsync<ApiEnvelope<List<ApiDesaDto>>>(url, JsonOptions, ct);
+        return res?.Data ?? new List<ApiDesaDto>();
     }
 
     public async Task<List<ApiLayananDto>> GetLayananAsync(CancellationToken ct = default)

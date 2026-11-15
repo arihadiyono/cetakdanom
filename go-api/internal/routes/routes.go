@@ -13,11 +13,16 @@ func SetupRouter(h *handlers.Handlers) http.Handler {
 	// Health check
 	mux.HandleFunc("GET /api/v1/health", h.HealthHandler)
 
+	// Auth endpoint
+	mux.HandleFunc("POST /api/v1/auth/login", h.LoginHandler)
+
 	// Reference endpoints
+	mux.HandleFunc("GET /api/v1/reference/project", h.GetProjectHandler)
 	mux.HandleFunc("GET /api/v1/reference/layanan", h.GetLayananHandler)
 	mux.HandleFunc("GET /api/v1/reference/tahap", h.GetTahapHandler)
 	mux.HandleFunc("GET /api/v1/reference/kabupaten", h.GetKabupatenHandler)
 	mux.HandleFunc("GET /api/v1/reference/kecamatan", h.GetKecamatanHandler)
+	mux.HandleFunc("GET /api/v1/reference/desa", h.GetDesaHandler)
 	mux.HandleFunc("GET /api/v1/reference/kelurahan", h.GetKelurahanHandler)
 
 	// Danom endpoints

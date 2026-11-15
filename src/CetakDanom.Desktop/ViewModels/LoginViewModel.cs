@@ -7,8 +7,8 @@ namespace CetakDanom.Desktop.ViewModels;
 public class LoginViewModel : ViewModelBase
 {
     private readonly IAuthenticationService _authService;
-    private string _userId = "demo";
-    private string _password = "demo123";
+    private string _userId = "asep";
+    private string _password = "123";
     private string _errorMessage = string.Empty;
     private bool _isLoading;
     private bool _hasError;
@@ -65,20 +65,20 @@ public class LoginViewModel : ViewModelBase
         LoginCommand = new RelayCommand(async () => await ExecuteLoginAsync(), () => !IsLoading);
         FillDemoAccountCommand = new RelayCommand(() =>
         {
-            UserId = "demo";
-            Password = "demo123";
+            UserId = "asep";
+            Password = "123";
             ErrorMessage = string.Empty;
         });
         FillPetugas01Command = new RelayCommand(() =>
         {
-            UserId = "petugas01";
-            Password = "pos12345";
+            UserId = "10009kakp";
+            Password = "123";
             ErrorMessage = string.Empty;
         });
         FillSupervisorCommand = new RelayCommand(() =>
         {
-            UserId = "supervisor";
-            Password = "super123";
+            UserId = "10009loket01";
+            Password = "123";
             ErrorMessage = string.Empty;
         });
     }

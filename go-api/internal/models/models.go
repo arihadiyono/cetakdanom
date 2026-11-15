@@ -24,6 +24,36 @@ type HealthResponse struct {
 	Timestamp time.Time `json:"timestamp"`
 }
 
+// Auth models
+type LoginRequest struct {
+	Username   string `json:"username"`
+	Password   string `json:"password"`
+	AppVersion string `json:"appVersion,omitempty"`
+}
+
+type LoginResponse struct {
+	IdPetugas string `json:"idPetugas"`
+	Nippos    string `json:"nippos"`
+	Nama      string `json:"nama"`
+	Nopend    string `json:"nopend"`
+	Kantor    string `json:"kantor"`
+	Jabatan   string `json:"jabatan"`
+	Status    string `json:"status"`
+	Token     string `json:"token"`
+}
+
+// Project & Tahap Reference models
+type ProjectRef struct {
+	IdProject string `json:"idProject"`
+	Deskripsi string `json:"deskripsi"`
+}
+
+type TahapRef struct {
+	IdTahap  string `json:"idTahap"`
+	KetTahap string `json:"ketTahap"`
+}
+
+// Legacy compat
 type LayananBansos struct {
 	Kode        string `json:"kode"`
 	Nama        string `json:"nama"`
@@ -34,6 +64,7 @@ type TahapBansos struct {
 	Batch string `json:"batch"`
 }
 
+// Wilayah Reference models
 type WilayahKabupaten struct {
 	Kode string `json:"kode"`
 	Nama string `json:"nama"`
@@ -50,6 +81,14 @@ type WilayahKelurahan struct {
 	Nama          string `json:"nama"`
 	KecamatanId   string `json:"kecamatanId"`
 	KecamatanNama string `json:"kecamatanNama"`
+	KabupatenId   string `json:"kabupatenId,omitempty"`
+}
+
+type WilayahDesa struct {
+	Kode        string `json:"kode"`
+	Nama        string `json:"nama"`
+	KecamatanId string `json:"kecamatanId"`
+	KabupatenId string `json:"kabupatenId"`
 }
 
 type DanomRecipient struct {

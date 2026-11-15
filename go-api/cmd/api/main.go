@@ -40,14 +40,16 @@ func main() {
 	defer db.Close()
 
 	// 4. Initialize repository & service layers
+	authRepo := repositories.NewAuthRepository(db.SQL)
 	refRepo := repositories.NewReferenceRepository(db.SQL)
 	danomRepo := repositories.NewDanomRepository(db.SQL)
 
+	authService := services.NewAuthService(authRepo)
 	refService := services.NewReferenceService(refRepo)
 	danomService := services.NewDanomService(danomRepo)
 
 	// 5. Initialize handlers & routes
-	h := handlers.NewHandlers(db, refService, danomService)
+	h := handlers.NewHandlers(db, authService, refService, danomService)
 	router := routes.SetupRouter(h)
 
 	// 6. Start HTTP Server

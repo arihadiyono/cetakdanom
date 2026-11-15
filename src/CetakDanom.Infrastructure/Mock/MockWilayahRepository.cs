@@ -72,4 +72,23 @@ public class MockWilayahRepository : IWilayahRepository
 
     public Task<IReadOnlyList<Wilayah>> GetKelurahanAsync(string kecamatanKode) =>
         Task.FromResult<IReadOnlyList<Wilayah>>(WilayahList.Where(w => w.Tingkat == TingkatWilayah.Kelurahan && w.ParentKode == kecamatanKode).ToList());
+
+    public Task<IReadOnlyList<LayananBansos>> GetProjectsAsync(string jenisBansos) =>
+        GetDaftarLayananAsync();
+
+    public Task<IReadOnlyList<TahapBansosItem>> GetTahapAsync(string jenisBansos, string projectId) =>
+        Task.FromResult<IReadOnlyList<TahapBansosItem>>(new List<TahapBansosItem>
+        {
+            new() { IdTahap = "M1-A01", KetTahap = "TAHAP 1 REGULER" },
+            new() { IdTahap = "M1-A02", KetTahap = "TAHAP 2 REGULER" }
+        });
+
+    public Task<IReadOnlyList<Wilayah>> GetAllKabupatenAsync() =>
+        Task.FromResult<IReadOnlyList<Wilayah>>(WilayahList.Where(w => w.Tingkat == TingkatWilayah.Kabupaten).ToList());
+
+    public Task<IReadOnlyList<Wilayah>> GetKecamatanByKabupatenAsync(string kabupatenKode) =>
+        GetKecamatanAsync(kabupatenKode);
+
+    public Task<IReadOnlyList<Wilayah>> GetDesaByKecamatanAsync(string kecamatanKode, string kabupatenKode = "") =>
+        GetKelurahanAsync(kecamatanKode);
 }

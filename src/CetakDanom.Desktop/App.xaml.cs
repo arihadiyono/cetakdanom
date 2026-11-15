@@ -49,7 +49,7 @@ public partial class App : WpfApp
     {
         // Go REST API Client & Integrated Repositories (Connecting to Go REST API -> SQL Server)
         services.AddSingleton<CetakDanomApiClient>();
-        services.AddSingleton<IAuthenticationService, MockAuthenticationService>();
+        services.AddSingleton<IAuthenticationService, ApiAuthenticationService>();
         services.AddSingleton<IWilayahRepository, ApiWilayahRepository>();
         services.AddSingleton<IDanomRepository, ApiDanomRepository>();
         services.AddTransient<IExportService, BnbaCsvExportService>();

@@ -8,8 +8,11 @@ namespace CetakDanom.Desktop.ViewModels;
 
 /// <summary>
 /// ViewModel untuk Menu 1: Unduh Danom
-/// Menangani alur pemilihan parameter hierarkis (Layanan, Program, Tahap, Kabupaten, Kecamatan, Desa)
-/// dan penarikan data dari server pusat ke penyimpanan lokal (meniru pnlAmbilData pada Utama.pas).
+/// Menangani alur pemilihan parameter hierarkis:
+/// 1. Jenis Bansos ("NASIONAL", "LOKAL", "INSTANSI/LEMBAGA")
+/// 2. Project / Nama Bantuan (refProject_NAS, refProject_KOTAKAB, refProject_INS)
+/// 3. Tahap Penyaluran (TTAHAP_NAS, TTAHAP_KOTAKAB, TTAHAP_INS filter by id_project)
+/// 4. Hierarki Wilayah Berjenjang: Kabupaten1 -> Kecamatan1 (filter KD_KABUPATEN) -> Desa1 (filter KD_KECAMATAN)
 /// </summary>
 public class UnduhDanomViewModel : ViewModelBase
 {
@@ -17,24 +20,27 @@ public class UnduhDanomViewModel : ViewModelBase
     private readonly IDanomRepository _danomRepo;
     private readonly IAuthenticationService _authService;
 
-    // Filter properties
-    private ObservableCollection<LayananBansos> _layananList = new();
-    private LayananBansos? _selectedLayanan;
+    // 1. Jenis Bansos (Hardcoded)
+    private ObservableCollection<string> _jenisBansosList = new() { "NASIONAL", "LOKAL", "INSTANSI/LEMBAGA" };
+    private string _selectedJenisBansos = "NASIONAL";
 
-    private ObservableCollection<string> _tahapList = new() { "M1-A04", "M1-A05", "M1-A06", "M1-A07", "M1-A08", "M1-A09", "M1-A10" };
-    private string _selectedTahap = "M1-A04";
+    // 2. Project / Nama Bantuan
+    private ObservableCollection<LayananBansos> _projectList = new();
+    private LayananBansos? _selectedProject;
 
-    private ObservableCollection<Wilayah> _provinsiList = new();
-    private Wilayah? _selectedProvinsi;
+    // 3. Tahap Penyaluran
+    private ObservableCollection<TahapBansosItem> _tahapList = new();
+    private TahapBansosItem? _selectedTahap;
 
+    // 4. Hierarki Wilayah (Kabupaten -> Kecamatan -> Desa)
     private ObservableCollection<Wilayah> _kabupatenList = new();
     private Wilayah? _selectedKabupaten;
 
     private ObservableCollection<Wilayah> _kecamatanList = new();
     private Wilayah? _selectedKecamatan;
 
-    private ObservableCollection<Wilayah> _kelurahanList = new();
-    private Wilayah? _selectedKelurahan;
+    private ObservableCollection<Wilayah> _desaList = new();
+    private Wilayah? _selectedDesa;
 
     // Execution & Progress State
     private bool _isDownloading;
@@ -45,46 +51,53 @@ public class UnduhDanomViewModel : ViewModelBase
     private int _downloadedCount;
     private decimal _downloadedNominal;
 
-    public ObservableCollection<LayananBansos> LayananList
+    // Properties
+    public ObservableCollection<string> JenisBansosList
     {
-        get => _layananList;
-        set => SetProperty(ref _layananList, value);
+        get => _jenisBansosList;
+        set => SetProperty(ref _jenisBansosList, value);
     }
 
-    public LayananBansos? SelectedLayanan
+    public string SelectedJenisBansos
     {
-        get => _selectedLayanan;
-        set => SetProperty(ref _selectedLayanan, value);
+        get => _selectedJenisBansos;
+        set
+        {
+            if (SetProperty(ref _selectedJenisBansos, value))
+            {
+                _ = OnJenisBansosChangedAsync(value);
+            }
+        }
     }
 
-    public ObservableCollection<string> TahapList
+    public ObservableCollection<LayananBansos> ProjectList
+    {
+        get => _projectList;
+        set => SetProperty(ref _projectList, value);
+    }
+
+    public LayananBansos? SelectedProject
+    {
+        get => _selectedProject;
+        set
+        {
+            if (SetProperty(ref _selectedProject, value))
+            {
+                _ = OnProjectChangedAsync(value);
+            }
+        }
+    }
+
+    public ObservableCollection<TahapBansosItem> TahapList
     {
         get => _tahapList;
         set => SetProperty(ref _tahapList, value);
     }
 
-    public string SelectedTahap
+    public TahapBansosItem? SelectedTahap
     {
         get => _selectedTahap;
         set => SetProperty(ref _selectedTahap, value);
-    }
-
-    public ObservableCollection<Wilayah> ProvinsiList
-    {
-        get => _provinsiList;
-        set => SetProperty(ref _provinsiList, value);
-    }
-
-    public Wilayah? SelectedProvinsi
-    {
-        get => _selectedProvinsi;
-        set
-        {
-            if (SetProperty(ref _selectedProvinsi, value))
-            {
-                OnProvinsiChanged(value);
-            }
-        }
     }
 
     public ObservableCollection<Wilayah> KabupatenList
@@ -123,16 +136,41 @@ public class UnduhDanomViewModel : ViewModelBase
         }
     }
 
+    public ObservableCollection<Wilayah> DesaList
+    {
+        get => _desaList;
+        set => SetProperty(ref _desaList, value);
+    }
+
+    public Wilayah? SelectedDesa
+    {
+        get => _selectedDesa;
+        set => SetProperty(ref _selectedDesa, value);
+    }
+
+    // Compat wrappers
+    public ObservableCollection<LayananBansos> LayananList
+    {
+        get => ProjectList;
+        set => ProjectList = value;
+    }
+
+    public LayananBansos? SelectedLayanan
+    {
+        get => SelectedProject;
+        set => SelectedProject = value;
+    }
+
     public ObservableCollection<Wilayah> KelurahanList
     {
-        get => _kelurahanList;
-        set => SetProperty(ref _kelurahanList, value);
+        get => DesaList;
+        set => DesaList = value;
     }
 
     public Wilayah? SelectedKelurahan
     {
-        get => _selectedKelurahan;
-        set => SetProperty(ref _selectedKelurahan, value);
+        get => SelectedDesa;
+        set => SelectedDesa = value;
     }
 
     public bool IsDownloading
@@ -199,43 +237,58 @@ public class UnduhDanomViewModel : ViewModelBase
 
     public async Task InitializeAsync()
     {
-        if (LayananList.Count == 0)
+        if (KabupatenList.Count == 0)
         {
-            var layanan = await _wilayahRepo.GetDaftarLayananAsync();
-            LayananList = new ObservableCollection<LayananBansos>(layanan);
-            SelectedLayanan = LayananList.FirstOrDefault();
+            var kabs = await _wilayahRepo.GetAllKabupatenAsync();
+            KabupatenList = new ObservableCollection<Wilayah>(kabs);
+            SelectedKabupaten = KabupatenList.FirstOrDefault();
         }
 
-        if (ProvinsiList.Count == 0)
+        if (ProjectList.Count == 0)
         {
-            var provs = await _wilayahRepo.GetProvinsiAsync();
-            ProvinsiList = new ObservableCollection<Wilayah>(provs);
-            SelectedProvinsi = ProvinsiList.FirstOrDefault();
+            await OnJenisBansosChangedAsync(SelectedJenisBansos);
         }
     }
 
-    private async void OnProvinsiChanged(Wilayah? prov)
+    private async Task OnJenisBansosChangedAsync(string? jenis)
     {
-        KabupatenList.Clear();
-        KecamatanList.Clear();
-        KelurahanList.Clear();
+        ProjectList.Clear();
+        TahapList.Clear();
+        SelectedProject = null;
+        SelectedTahap = null;
 
-        if (prov != null)
+        if (!string.IsNullOrEmpty(jenis))
         {
-            var kabs = await _wilayahRepo.GetKabupatenAsync(prov.Kode);
-            KabupatenList = new ObservableCollection<Wilayah>(kabs);
-            SelectedKabupaten = KabupatenList.FirstOrDefault();
+            var projects = await _wilayahRepo.GetProjectsAsync(jenis);
+            ProjectList = new ObservableCollection<LayananBansos>(projects);
+            SelectedProject = ProjectList.FirstOrDefault();
+        }
+    }
+
+    private async Task OnProjectChangedAsync(LayananBansos? proj)
+    {
+        TahapList.Clear();
+        SelectedTahap = null;
+
+        if (proj != null && !string.IsNullOrEmpty(proj.Kode))
+        {
+            var tahaps = await _wilayahRepo.GetTahapAsync(SelectedJenisBansos, proj.Kode);
+            TahapList = new ObservableCollection<TahapBansosItem>(tahaps);
+            SelectedTahap = TahapList.FirstOrDefault();
         }
     }
 
     private async void OnKabupatenChanged(Wilayah? kab)
     {
         KecamatanList.Clear();
-        KelurahanList.Clear();
+        DesaList.Clear();
+        SelectedKecamatan = null;
+        SelectedDesa = null;
 
-        if (kab != null)
+        if (kab != null && !string.IsNullOrEmpty(kab.Kode))
         {
-            var kecs = await _wilayahRepo.GetKecamatanAsync(kab.Kode);
+            var rawKode = kab.Kode.Split(' ')[0].Trim();
+            var kecs = await _wilayahRepo.GetKecamatanByKabupatenAsync(rawKode);
             KecamatanList = new ObservableCollection<Wilayah>(kecs);
             SelectedKecamatan = KecamatanList.FirstOrDefault();
         }
@@ -243,19 +296,22 @@ public class UnduhDanomViewModel : ViewModelBase
 
     private async void OnKecamatanChanged(Wilayah? kec)
     {
-        KelurahanList.Clear();
+        DesaList.Clear();
+        SelectedDesa = null;
 
-        if (kec != null)
+        if (kec != null && !string.IsNullOrEmpty(kec.Kode))
         {
-            var kels = await _wilayahRepo.GetKelurahanAsync(kec.Kode);
-            KelurahanList = new ObservableCollection<Wilayah>(kels);
-            SelectedKelurahan = KelurahanList.FirstOrDefault();
+            var rawKecKode = kec.Kode.Split(' ')[0].Trim();
+            var rawKabKode = SelectedKabupaten?.Kode.Split(' ')[0].Trim() ?? "";
+            var desas = await _wilayahRepo.GetDesaByKecamatanAsync(rawKecKode, rawKabKode);
+            DesaList = new ObservableCollection<Wilayah>(desas);
+            SelectedDesa = DesaList.FirstOrDefault();
         }
     }
 
     private async Task ExecuteTarikDataAsync()
     {
-        if (SelectedKelurahan == null)
+        if (SelectedDesa == null)
         {
             ProgressStatusText = "Pilih Kelurahan/Desa terlebih dahulu!";
             return;
@@ -268,46 +324,58 @@ public class UnduhDanomViewModel : ViewModelBase
 
         void AddLog(string msg) => LogLines.Add($"[{DateTime.Now:HH:mm:ss}] {msg}");
 
-        AddLog($"Memulai proses penarikan data Danom...");
-        AddLog($"Program: {SelectedLayanan?.Nama ?? "BST"} (Tahap {SelectedTahap})");
-        AddLog($"Wilayah: Kel. {SelectedKelurahan.Nama}, Kec. {SelectedKecamatan?.Nama}, {SelectedKabupaten?.Nama}");
+        var rawDesaKode = SelectedDesa.Kode.Split(' ')[0].Trim();
+        var rawKecKode = SelectedKecamatan?.Kode.Split(' ')[0].Trim() ?? "";
+        var rawKabKode = SelectedKabupaten?.Kode.Split(' ')[0].Trim() ?? "";
+        var batchTahap = SelectedTahap?.IdTahap ?? "1";
+        var projectKode = SelectedProject?.Kode ?? "SPK1";
 
-        DownloadProgress = 20;
-        ProgressStatusText = "Menghubungi middleware server...";
-        await Task.Delay(300);
+        AddLog($"Memulai proses penarikan data Danom dari basis data DB_BLT...");
+        AddLog($"Jenis Bansos: {SelectedJenisBansos} | Project: {SelectedProject?.Nama}");
+        AddLog($"Tahap: {SelectedTahap?.Display} | Desa/Kel: {SelectedDesa.Nama}");
+        AddLog($"Kecamatan: {SelectedKecamatan?.Nama} | Kabupaten: {SelectedKabupaten?.Nama}");
 
-        AddLog($"Mengunduh parameter dokumen param_{SelectedLayanan?.Kode.ToLower()}_{SelectedTahap}.pos...");
-        DownloadProgress = 40;
-        await Task.Delay(300);
+        DownloadProgress = 25;
+        ProgressStatusText = "Menghubungi Go REST API (SQL Server DB_BLT)...";
+        await Task.Delay(200);
 
-        AddLog($"Menjalankan kueri Stored Procedure data KPM...");
-        DownloadProgress = 70;
-        ProgressStatusText = "Memproses dataset penerima...";
-        await Task.Delay(400);
+        DownloadProgress = 50;
+        ProgressStatusText = "Mengeksekusi query nominatif KPM...";
 
-        // Tarik data sesungguhnya dari mock repository
         var filter = new DanomFilterRequest
         {
-            LayananKode = SelectedLayanan?.Kode,
-            Tahap = SelectedTahap,
-            ProvinsiKode = SelectedProvinsi?.Kode,
-            KabupatenKode = SelectedKabupaten?.Kode,
-            KecamatanKode = SelectedKecamatan?.Kode,
-            KelurahanKode = SelectedKelurahan?.Kode
+            LayananKode = projectKode,
+            Tahap = batchTahap,
+            KabupatenKode = rawKabKode,
+            KecamatanKode = rawKecKode,
+            KelurahanKode = rawDesaKode
         };
-        var data = await _danomRepo.GetPenerimaListAsync(filter);
 
-        DownloadedCount = data.Count;
-        DownloadedNominal = data.Sum(d => d.Nominal);
+        try
+        {
+            var data = await _danomRepo.GetPenerimaListAsync(filter);
 
-        DownloadProgress = 100;
-        ProgressStatusText = $"Sukses! Berhasil mengunduh {DownloadedCount} data KPM.";
-        AddLog($"Berhasil mengunduh {DownloadedCount} record KPM.");
-        AddLog($"Total Nominal: Rp {DownloadedNominal:N0}");
-        AddLog($"Dataset tersimpan ke basis data lokal (Mode Offline F5 siap).");
-        AddLog($"Status: SELESAI.");
+            DownloadedCount = data.Count;
+            DownloadedNominal = data.Sum(d => d.Nominal);
 
-        IsDownloading = false;
-        IsDownloadCompleted = true;
+            DownloadProgress = 100;
+            ProgressStatusText = $"Sukses! Berhasil mengunduh {DownloadedCount} data KPM.";
+            AddLog($"Berhasil mengunduh {DownloadedCount} record KPM.");
+            AddLog($"Total Nominal: Rp {DownloadedNominal:N0}");
+            AddLog($"Data tersimpan ke memori & lokal (Mode Cetak Danom siap).");
+            AddLog($"Status: SELESAI.");
+
+            IsDownloadCompleted = true;
+        }
+        catch (Exception ex)
+        {
+            DownloadProgress = 0;
+            ProgressStatusText = $"Gagal mengunduh: {ex.Message}";
+            AddLog($"ERROR: {ex.Message}");
+        }
+        finally
+        {
+            IsDownloading = false;
+        }
     }
 }

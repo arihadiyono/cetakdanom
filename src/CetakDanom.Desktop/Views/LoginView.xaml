@@ -49,22 +49,22 @@
                 <Separator Margin="0,4,0,16"/>
 
                 <!-- Demo Account Selector -->
-                <TextBlock Text="Pilih Akun Demo Cepat (1-Klik):" FontWeight="SemiBold" FontSize="11" Foreground="{StaticResource TextMutedBrush}" Margin="0,0,0,8"/>
+                <TextBlock Text="Pilih Akun Login TPETUGAS (1-Klik):" FontWeight="SemiBold" FontSize="11" Foreground="{StaticResource TextMutedBrush}" Margin="0,0,0,8"/>
                 <Grid Margin="0,0,0,8">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
-                    <Button Grid.Column="0" Content="Loket Bandung" Style="{StaticResource SecondaryButtonStyle}" 
+                    <Button Grid.Column="0" Content="asep (Pusat)" Style="{StaticResource SecondaryButtonStyle}" 
                             FontSize="11" Margin="0,0,4,0" Command="{Binding FillDemoAccountCommand}"/>
-                    <Button Grid.Column="1" Content="Operator Cimahi" Style="{StaticResource SecondaryButtonStyle}" 
+                    <Button Grid.Column="1" Content="10009kakp (Giro)" Style="{StaticResource SecondaryButtonStyle}" 
                             FontSize="11" Margin="2,0,2,0" Command="{Binding FillPetugas01Command}"/>
-                    <Button Grid.Column="2" Content="Supervisor" Style="{StaticResource SecondaryButtonStyle}" 
+                    <Button Grid.Column="2" Content="10009loket01" Style="{StaticResource SecondaryButtonStyle}" 
                             FontSize="11" Margin="4,0,0,0" Command="{Binding FillSupervisorCommand}"/>
                 </Grid>
 
-                <TextBlock Text="Akun Demo: demo / demo123 (Nopend: 40000 - KCU Bandung)" FontSize="10" Foreground="{StaticResource TextMutedBrush}" HorizontalAlignment="Center"/>
+                <TextBlock Text="Akun DB_BLT: asep / 123 (Kantor: 40005 - WESELPOSPUSAT)" FontSize="10" Foreground="{StaticResource TextMutedBrush}" HorizontalAlignment="Center"/>
 
                 <!-- Footer Version -->
                 <TextBlock Text="{Binding AppVersion}" FontSize="11" Foreground="{StaticResource TextMutedBrush}" HorizontalAlignment="Center" Margin="0,20,0,0"/>

@@ -35,23 +35,23 @@
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
 
-                <!-- Col 0: Layanan & Program -->
+                <!-- Row 0: Jenis Bansos, Project, Tahap -->
                 <StackPanel Grid.Row="0" Grid.Column="0" Margin="0,0,16,16">
-                    <TextBlock Text="Jenis Layanan Bantuan *" Style="{StaticResource FormLabelStyle}"/>
-                    <ComboBox ItemsSource="{Binding LayananList}" SelectedItem="{Binding SelectedLayanan}" DisplayMemberPath="Nama" Height="36"/>
+                    <TextBlock Text="Jenis Bansos *" Style="{StaticResource FormLabelStyle}"/>
+                    <ComboBox ItemsSource="{Binding JenisBansosList}" SelectedItem="{Binding SelectedJenisBansos}" Height="36"/>
                 </StackPanel>
 
                 <StackPanel Grid.Row="0" Grid.Column="1" Margin="0,0,16,16">
-                    <TextBlock Text="Tahap Penyaluran *" Style="{StaticResource FormLabelStyle}"/>
-                    <ComboBox ItemsSource="{Binding TahapList}" SelectedItem="{Binding SelectedTahap}" Height="36"/>
+                    <TextBlock Text="Project / Nama Bantuan *" Style="{StaticResource FormLabelStyle}"/>
+                    <ComboBox ItemsSource="{Binding ProjectList}" SelectedItem="{Binding SelectedProject}" DisplayMemberPath="Nama" Height="36"/>
                 </StackPanel>
 
                 <StackPanel Grid.Row="0" Grid.Column="2" Margin="0,0,0,16">
-                    <TextBlock Text="Provinsi *" Style="{StaticResource FormLabelStyle}"/>
-                    <ComboBox ItemsSource="{Binding ProvinsiList}" SelectedItem="{Binding SelectedProvinsi}" DisplayMemberPath="Nama" Height="36"/>
+                    <TextBlock Text="Tahap Penyaluran *" Style="{StaticResource FormLabelStyle}"/>
+                    <ComboBox ItemsSource="{Binding TahapList}" SelectedItem="{Binding SelectedTahap}" DisplayMemberPath="Display" Height="36"/>
                 </StackPanel>
 
-                <!-- Row 1: Kabupaten, Kecamatan, Kelurahan -->
+                <!-- Row 1: Kabupaten, Kecamatan, Desa -->
                 <StackPanel Grid.Row="1" Grid.Column="0" Margin="0,0,16,0">
                     <TextBlock Text="Kabupaten / Kota *" Style="{StaticResource FormLabelStyle}"/>
                     <ComboBox ItemsSource="{Binding KabupatenList}" SelectedItem="{Binding SelectedKabupaten}" DisplayMemberPath="Nama" Height="36"/>
@@ -64,7 +64,7 @@
 
                 <StackPanel Grid.Row="1" Grid.Column="2">
                     <TextBlock Text="Desa / Kelurahan *" Style="{StaticResource FormLabelStyle}"/>
-                    <ComboBox ItemsSource="{Binding KelurahanList}" SelectedItem="{Binding SelectedKelurahan}" DisplayMemberPath="Nama" Height="36"/>
+                    <ComboBox ItemsSource="{Binding DesaList}" SelectedItem="{Binding SelectedDesa}" DisplayMemberPath="Nama" Height="36"/>
                 </StackPanel>
             </Grid>
         </Border>

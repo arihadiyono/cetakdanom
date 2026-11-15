@@ -12,40 +12,108 @@ public class ApiWilayahRepository : IWilayahRepository
         _client = client;
     }
 
-    public async Task<IReadOnlyList<LayananBansos>> GetDaftarLayananAsync()
+    public async Task<IReadOnlyList<LayananBansos>> GetProjectsAsync(string jenisBansos)
     {
         try
         {
-            var apiList = await _client.GetLayananAsync();
-            if (apiList.Count > 0)
+            var apiList = await _client.GetProjectsAsync(jenisBansos);
+            return apiList.Select(p => new LayananBansos
             {
-                return apiList.Select(l => new LayananBansos
-                {
-                    Kode = l.Kode,
-                    Nama = l.Nama,
-                    Deskripsi = string.IsNullOrWhiteSpace(l.HeaderDanom) ? l.Nama : l.HeaderDanom,
-                    DefaultNominal = 600000m,
-                    DaftarTahap = new List<string> { "M1-A04", "M1-A05", "M1-A06", "M1-A09", "M1-A10" }
-                }).ToList();
-            }
+                Kode = p.IdProject,
+                Nama = $"{p.IdProject} - {p.Deskripsi}",
+                Deskripsi = p.Deskripsi,
+                DefaultNominal = 600000m
+            }).ToList();
         }
         catch
         {
-            // Fallback gracefully
+            return new List<LayananBansos>();
         }
+    }
 
-        // Default if offline
-        return new List<LayananBansos>
+    public async Task<IReadOnlyList<TahapBansosItem>> GetTahapAsync(string jenisBansos, string projectId)
+    {
+        try
         {
-            new() { Kode = "SPK1", Nama = "SEMBAKO & PKH 2023", Deskripsi = "Bantuan Sembako dan PKH Kemensos", DefaultNominal = 600000m },
-            new() { Kode = "BMA", Nama = "BLT BBM, SEMBAKO & PKH", Deskripsi = "Bantuan Langsung Tunai BBM & Sembako", DefaultNominal = 600000m },
-            new() { Kode = "PBP1", Nama = "PBP CADANGAN BERAS", Deskripsi = "Pangan Bantuan Pangan Beras", DefaultNominal = 300000m }
-        };
+            var apiList = await _client.GetTahapAsync(jenisBansos, projectId);
+            return apiList.Select(t => new TahapBansosItem
+            {
+                IdTahap = t.IdTahap,
+                KetTahap = t.KetTahap
+            }).ToList();
+        }
+        catch
+        {
+            return new List<TahapBansosItem>();
+        }
+    }
+
+    public async Task<IReadOnlyList<Wilayah>> GetAllKabupatenAsync()
+    {
+        try
+        {
+            var kabs = await _client.GetAllKabupatenAsync();
+            return kabs.Select(k => new Wilayah
+            {
+                Kode = k.Kode,
+                Nama = $"{k.Kode} - {k.Nama}",
+                Tingkat = TingkatWilayah.Kabupaten
+            }).ToList();
+        }
+        catch
+        {
+            return new List<Wilayah>();
+        }
+    }
+
+    public async Task<IReadOnlyList<Wilayah>> GetKecamatanByKabupatenAsync(string kabupatenKode)
+    {
+        try
+        {
+            var kecs = await _client.GetKecamatanByKabupatenAsync(kabupatenKode);
+            return kecs.Select(k => new Wilayah
+            {
+                Kode = k.Kode,
+                Nama = $"{k.Kode} - {k.Nama}",
+                Tingkat = TingkatWilayah.Kecamatan,
+                ParentKode = kabupatenKode
+            }).ToList();
+        }
+        catch
+        {
+            return new List<Wilayah>();
+        }
+    }
+
+    public async Task<IReadOnlyList<Wilayah>> GetDesaByKecamatanAsync(string kecamatanKode, string kabupatenKode = "")
+    {
+        try
+        {
+            var desas = await _client.GetDesaByKecamatanAsync(kecamatanKode, kabupatenKode);
+            return desas.Select(d => new Wilayah
+            {
+                Kode = d.Kode,
+                Nama = $"{d.Kode} - {d.Nama}",
+                Tingkat = TingkatWilayah.Kelurahan,
+                ParentKode = kecamatanKode
+            }).ToList();
+        }
+        catch
+        {
+            return new List<Wilayah>();
+        }
+    }
+
+    // ----------------------------------------------------------------------
+    // Backward-compatible methods
+    // ----------------------------------------------------------------------
+    public async Task<IReadOnlyList<LayananBansos>> GetDaftarLayananAsync()
+    {
+        return await GetProjectsAsync("NASIONAL");
     }
 
     public Task<IReadOnlyList<Wilayah>> GetProvinsiAsync()
     {
-        // Standard Indonesian provinces supported by CetakDanom
         var provs = new List<Wilayah>
         {
             new() { Kode = "32", Nama = "JAWA BARAT", Tingkat = TingkatWilayah.Provinsi },
@@ -58,51 +126,19 @@ public class ApiWilayahRepository : IWilayahRepository
 
     public async Task<IReadOnlyList<Wilayah>> GetKabupatenAsync(string provinsiKode)
     {
-        var kabs = await _client.GetKabupatenAsync();
-        var filtered = kabs.Where(k => string.IsNullOrEmpty(provinsiKode) || k.Kode.StartsWith(provinsiKode))
-                           .Select(k => new Wilayah
-                           {
-                               Kode = k.Kode,
-                               Nama = k.Nama,
-                               Tingkat = TingkatWilayah.Kabupaten,
-                               ParentKode = provinsiKode
-                           }).ToList();
-
-        if (filtered.Count == 0 && kabs.Count > 0)
-        {
-            return kabs.Take(10).Select(k => new Wilayah
-            {
-                Kode = k.Kode,
-                Nama = k.Nama,
-                Tingkat = TingkatWilayah.Kabupaten,
-                ParentKode = provinsiKode
-            }).ToList();
-        }
-
-        return filtered;
+        var kabs = await GetAllKabupatenAsync();
+        if (string.IsNullOrEmpty(provinsiKode)) return kabs;
+        var filtered = kabs.Where(k => k.Kode.StartsWith(provinsiKode)).ToList();
+        return filtered.Count > 0 ? filtered : kabs;
     }
 
-    public async Task<IReadOnlyList<Wilayah>> GetKecamatanAsync(string kabupatenKode)
+    public Task<IReadOnlyList<Wilayah>> GetKecamatanAsync(string kabupatenKode)
     {
-        var kecs = await _client.GetKecamatanAsync(kabupatenKode);
-        return kecs.Select(k => new Wilayah
-        {
-            Kode = k.Kode,
-            Nama = k.Nama,
-            Tingkat = TingkatWilayah.Kecamatan,
-            ParentKode = kabupatenKode
-        }).ToList();
+        return GetKecamatanByKabupatenAsync(kabupatenKode);
     }
 
-    public async Task<IReadOnlyList<Wilayah>> GetKelurahanAsync(string kecamatanKode)
+    public Task<IReadOnlyList<Wilayah>> GetKelurahanAsync(string kecamatanKode)
     {
-        var kels = await _client.GetKelurahanAsync(kecamatanKode);
-        return kels.Select(k => new Wilayah
-        {
-            Kode = k.Kode,
-            Nama = k.Nama,
-            Tingkat = TingkatWilayah.Kelurahan,
-            ParentKode = kecamatanKode
-        }).ToList();
+        return GetDesaByKecamatanAsync(kecamatanKode, "");
     }
 }

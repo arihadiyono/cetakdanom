@@ -3,6 +3,7 @@ package handlers
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"log/slog"
 	"net/http"
 	"strconv"
@@ -10,18 +11,26 @@ import (
 
 	"cetakdanom/api/internal/database"
 	"cetakdanom/api/internal/models"
+	"cetakdanom/api/internal/repositories"
 	"cetakdanom/api/internal/services"
 )
 
 type Handlers struct {
 	db           *database.DB
+	authService  *services.AuthService
 	refService   *services.ReferenceService
 	danomService *services.DanomService
 }
 
-func NewHandlers(db *database.DB, refService *services.ReferenceService, danomService *services.DanomService) *Handlers {
+func NewHandlers(
+	db *database.DB,
+	authService *services.AuthService,
+	refService *services.ReferenceService,
+	danomService *services.DanomService,
+) *Handlers {
 	return &Handlers{
 		db:           db,
+		authService:  authService,
 		refService:   refService,
 		danomService: danomService,
 	}
@@ -52,7 +61,146 @@ func (h *Handlers) HealthHandler(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, statusCode, res)
 }
 
-// GetLayananHandler returns list of Bansos projects from DB
+// LoginHandler handles user authentication against TPETUGAS joined with TKANTOR
+func (h *Handlers) LoginHandler(w http.ResponseWriter, r *http.Request) {
+	ctx, cancel := contextWithTimeout(r, 10*time.Second)
+	defer cancel()
+
+	var req models.LoginRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeError(w, http.StatusBadRequest, "Format JSON tidak valid: "+err.Error())
+		return
+	}
+
+	res, err := h.authService.Authenticate(ctx, req.Username, req.Password)
+	if err != nil {
+		slog.Warn("login failed", "username", req.Username, "error", err)
+		if errors.Is(err, repositories.ErrUserNotFound) {
+			writeError(w, http.StatusUnauthorized, "User ID tidak terdaftar")
+			return
+		}
+		if errors.Is(err, repositories.ErrInvalidPassword) {
+			writeError(w, http.StatusUnauthorized, "Password salah")
+			return
+		}
+		writeError(w, http.StatusUnauthorized, err.Error())
+		return
+	}
+
+	slog.Info("login successful", "userId", res.IdPetugas, "kantor", res.Kantor, "nopend", res.Nopend)
+	writeSuccess(w, "Login berhasil", res, nil)
+}
+
+// GetProjectHandler returns projects based on Jenis Bansos: NASIONAL, LOKAL, INSTANSI/LEMBAGA
+func (h *Handlers) GetProjectHandler(w http.ResponseWriter, r *http.Request) {
+	ctx, cancel := contextWithTimeout(r, 10*time.Second)
+	defer cancel()
+
+	jenis := r.URL.Query().Get("jenis")
+	if jenis == "" {
+		jenis = "NASIONAL"
+	}
+
+	list, err := h.refService.GetProjects(ctx, jenis)
+	if err != nil {
+		slog.Error("failed to get projects", "error", err, "jenis", jenis)
+		writeError(w, http.StatusInternalServerError, "Gagal mengambil daftar project: "+err.Error())
+		return
+	}
+
+	writeSuccess(w, "Daftar project/nama bantuan berhasil diambil", list, nil)
+}
+
+// GetTahapHandler returns stages based on Jenis Bansos and selected IdProject
+func (h *Handlers) GetTahapHandler(w http.ResponseWriter, r *http.Request) {
+	ctx, cancel := contextWithTimeout(r, 10*time.Second)
+	defer cancel()
+
+	jenis := r.URL.Query().Get("jenis")
+	if jenis == "" {
+		jenis = "NASIONAL"
+	}
+
+	projectId := r.URL.Query().Get("project_id")
+	if projectId == "" {
+		writeSuccess(w, "Daftar tahap kosong", []models.TahapRef{}, nil)
+		return
+	}
+
+	list, err := h.refService.GetTahapByProject(ctx, jenis, projectId)
+	if err != nil {
+		slog.Error("failed to get tahap", "error", err, "jenis", jenis, "project_id", projectId)
+		writeError(w, http.StatusInternalServerError, "Gagal mengambil daftar tahap: "+err.Error())
+		return
+	}
+
+	writeSuccess(w, "Daftar tahap berhasil diambil", list, nil)
+}
+
+// GetKabupatenHandler returns list of kabupaten/kota from KABUPATEN1
+func (h *Handlers) GetKabupatenHandler(w http.ResponseWriter, r *http.Request) {
+	ctx, cancel := contextWithTimeout(r, 10*time.Second)
+	defer cancel()
+
+	list, err := h.refService.GetAllKabupaten(ctx)
+	if err != nil {
+		slog.Error("failed to get kabupaten", "error", err)
+		writeError(w, http.StatusInternalServerError, "Gagal mengambil daftar kabupaten: "+err.Error())
+		return
+	}
+
+	writeSuccess(w, "Daftar kabupaten berhasil diambil", list, nil)
+}
+
+// GetKecamatanHandler returns list of kecamatan for a kabupaten from KECAMATAN1
+func (h *Handlers) GetKecamatanHandler(w http.ResponseWriter, r *http.Request) {
+	ctx, cancel := contextWithTimeout(r, 10*time.Second)
+	defer cancel()
+
+	kabId := r.URL.Query().Get("kabupaten_id")
+	if kabId == "" {
+		writeError(w, http.StatusBadRequest, "Parameter 'kabupaten_id' (kode kabupaten) wajib diisi.")
+		return
+	}
+
+	list, err := h.refService.GetKecamatanByKabupaten(ctx, kabId)
+	if err != nil {
+		slog.Error("failed to get kecamatan", "error", err, "kabId", kabId)
+		writeError(w, http.StatusInternalServerError, "Gagal mengambil daftar kecamatan: "+err.Error())
+		return
+	}
+
+	writeSuccess(w, "Daftar kecamatan berhasil diambil", list, nil)
+}
+
+// GetDesaHandler returns list of desa/kelurahan for a kecamatan (and kabupaten) from DESA1
+func (h *Handlers) GetDesaHandler(w http.ResponseWriter, r *http.Request) {
+	ctx, cancel := contextWithTimeout(r, 10*time.Second)
+	defer cancel()
+
+	kecId := r.URL.Query().Get("kecamatan_id")
+	if kecId == "" {
+		writeError(w, http.StatusBadRequest, "Parameter 'kecamatan_id' (kode kecamatan) wajib diisi.")
+		return
+	}
+	kabId := r.URL.Query().Get("kabupaten_id")
+
+	list, err := h.refService.GetDesaByKecamatan(ctx, kecId, kabId)
+	if err != nil {
+		slog.Error("failed to get desa", "error", err, "kecId", kecId, "kabId", kabId)
+		writeError(w, http.StatusInternalServerError, "Gagal mengambil daftar desa/kelurahan: "+err.Error())
+		return
+	}
+
+	writeSuccess(w, "Daftar desa/kelurahan berhasil diambil", list, nil)
+}
+
+// GetKelurahanHandler provides backward-compatible endpoint for kelurahan
+func (h *Handlers) GetKelurahanHandler(w http.ResponseWriter, r *http.Request) {
+	h.GetDesaHandler(w, r)
+}
+
+// GetLayananHandler provides backward-compatible endpoint for layanan
 func (h *Handlers) GetLayananHandler(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := contextWithTimeout(r, 10*time.Second)
 	defer cancel()
@@ -65,95 +213,6 @@ func (h *Handlers) GetLayananHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	writeSuccess(w, "Daftar jenis bantuan sosial berhasil diambil", list, nil)
-}
-
-// GetTahapHandler returns stages/batches for a project
-func (h *Handlers) GetTahapHandler(w http.ResponseWriter, r *http.Request) {
-	ctx, cancel := contextWithTimeout(r, 10*time.Second)
-	defer cancel()
-
-	projectId := r.URL.Query().Get("project_id")
-	if projectId == "" {
-		projectId = "SPK1"
-	}
-
-	list, err := h.refService.GetTahap(ctx, projectId)
-	if err != nil {
-		slog.Error("failed to get tahap", "error", err, "project_id", projectId)
-		writeError(w, http.StatusInternalServerError, "Gagal mengambil daftar tahap: "+err.Error())
-		return
-	}
-
-	writeSuccess(w, "Daftar tahap/batch berhasil diambil", list, nil)
-}
-
-// GetKabupatenHandler returns list of kabupaten/kota
-func (h *Handlers) GetKabupatenHandler(w http.ResponseWriter, r *http.Request) {
-	ctx, cancel := contextWithTimeout(r, 10*time.Second)
-	defer cancel()
-
-	nopend := r.URL.Query().Get("nopend")
-	idPetugas := r.URL.Query().Get("id_petugas")
-	nippos := r.URL.Query().Get("nippos")
-
-	list, err := h.refService.GetKabupaten(ctx, nopend, idPetugas, nippos)
-	if err != nil {
-		slog.Error("failed to get kabupaten", "error", err)
-		writeError(w, http.StatusInternalServerError, "Gagal mengambil daftar kabupaten: "+err.Error())
-		return
-	}
-
-	writeSuccess(w, "Daftar kabupaten berhasil diambil", list, nil)
-}
-
-// GetKecamatanHandler returns list of kecamatan for a kabupaten
-func (h *Handlers) GetKecamatanHandler(w http.ResponseWriter, r *http.Request) {
-	ctx, cancel := contextWithTimeout(r, 10*time.Second)
-	defer cancel()
-
-	kabId := r.URL.Query().Get("kabupaten_id")
-	if kabId == "" {
-		writeError(w, http.StatusBadRequest, "Parameter 'kabupaten_id' (4 digit) wajib diisi.")
-		return
-	}
-
-	nopend := r.URL.Query().Get("nopend")
-	idPetugas := r.URL.Query().Get("id_petugas")
-	nippos := r.URL.Query().Get("nippos")
-
-	list, err := h.refService.GetKecamatan(ctx, kabId, nopend, idPetugas, nippos)
-	if err != nil {
-		slog.Error("failed to get kecamatan", "error", err, "kabId", kabId)
-		writeError(w, http.StatusInternalServerError, "Gagal mengambil daftar kecamatan: "+err.Error())
-		return
-	}
-
-	writeSuccess(w, "Daftar kecamatan berhasil diambil", list, nil)
-}
-
-// GetKelurahanHandler returns list of kelurahan/desa for a kecamatan
-func (h *Handlers) GetKelurahanHandler(w http.ResponseWriter, r *http.Request) {
-	ctx, cancel := contextWithTimeout(r, 10*time.Second)
-	defer cancel()
-
-	kecId := r.URL.Query().Get("kecamatan_id")
-	if kecId == "" {
-		writeError(w, http.StatusBadRequest, "Parameter 'kecamatan_id' (6 digit) wajib diisi.")
-		return
-	}
-
-	nopend := r.URL.Query().Get("nopend")
-	idPetugas := r.URL.Query().Get("id_petugas")
-	nippos := r.URL.Query().Get("nippos")
-
-	list, err := h.refService.GetKelurahan(ctx, kecId, nopend, idPetugas, nippos)
-	if err != nil {
-		slog.Error("failed to get kelurahan", "error", err, "kecId", kecId)
-		writeError(w, http.StatusInternalServerError, "Gagal mengambil daftar kelurahan: "+err.Error())
-		return
-	}
-
-	writeSuccess(w, "Daftar kelurahan/desa berhasil diambil", list, nil)
 }
 
 // GetDanomHandler queries actual Danom recipients from database

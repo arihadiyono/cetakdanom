@@ -15,6 +15,27 @@ func NewReferenceService(repo *repositories.ReferenceRepository) *ReferenceServi
 	return &ReferenceService{repo: repo}
 }
 
+func (s *ReferenceService) GetProjects(ctx context.Context, jenis string) ([]models.ProjectRef, error) {
+	return s.repo.GetProjects(ctx, jenis)
+}
+
+func (s *ReferenceService) GetTahapByProject(ctx context.Context, jenis, projectId string) ([]models.TahapRef, error) {
+	return s.repo.GetTahapByProject(ctx, jenis, projectId)
+}
+
+func (s *ReferenceService) GetAllKabupaten(ctx context.Context) ([]models.WilayahKabupaten, error) {
+	return s.repo.GetAllKabupaten(ctx)
+}
+
+func (s *ReferenceService) GetKecamatanByKabupaten(ctx context.Context, kabId string) ([]models.WilayahKecamatan, error) {
+	return s.repo.GetKecamatanByKabupaten(ctx, kabId)
+}
+
+func (s *ReferenceService) GetDesaByKecamatan(ctx context.Context, kecId, kabId string) ([]models.WilayahDesa, error) {
+	return s.repo.GetDesaByKecamatan(ctx, kecId, kabId)
+}
+
+// Backward-compatible methods
 func (s *ReferenceService) GetLayanan(ctx context.Context) ([]models.LayananBansos, error) {
 	return s.repo.GetLayanan(ctx)
 }
